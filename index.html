@@ -7,6 +7,7 @@
   <meta name="description" content="Instantly detect scam SMS and WhatsApp messages. Free AI-powered scam detector for Oman and the GCC."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -127,6 +128,29 @@
     .ex-label { font-size: 11px; font-family: var(--mono); color: var(--muted); }
     .ex-pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
     .ex-pill:hover { border-color: var(--border2); color: var(--text); }
+
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: var(--mono);
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--blue); background: rgba(37,99,235,0.05); }
+    .upload-zone svg { width: 20px; height: 20px; color: var(--muted); margin-bottom: 6px; }
+    .upload-zone p { font-size: 12px; color: var(--muted); }
+    .upload-zone p span { color: var(--lblue); }
+    .upload-zone input { display: none; }
+    .upload-preview { display: none; align-items: center; gap: 10px; margin-top: 10px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+    .upload-preview.visible { display: flex; }
+    .upload-preview img { width: 36px; height: 36px; object-fit: cover; border-radius: 5px; }
+    .upload-preview-text { flex: 1; font-size: 11px; font-family: var(--mono); color: var(--muted); }
+    .upload-preview-remove { font-size: 11px; font-family: var(--mono); color: var(--danger); cursor: pointer; background: none; border: none; }
+    .ocr-status { font-size: 11px; font-family: var(--mono); color: var(--cyan); margin-top: 8px; display: none; }
+    .ocr-status.visible { display: block; }
     .scan-btn { width: 100%; padding: 13px; font-family: var(--display); font-size: 14px; font-weight: 700; background: var(--blue); color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
     .scan-btn:hover { opacity: 0.88; }
     .scan-btn:active { transform: scale(0.99); }
@@ -276,6 +300,22 @@
     <div class="scan-card">
       <div class="field-label">Message to analyse</div>
       <textarea id="msg" placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" dir="auto"></textarea>
+
+      <div class="upload-zone" id="uploadZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto;display:block;">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <p>Drop a screenshot here or <span>browse</span> — we'll read the text for you</p>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <div class="upload-preview" id="uploadPreview">
+        <img id="previewImg" src="" alt="">
+        <span class="upload-preview-text" id="previewText">image.png</span>
+        <button class="upload-preview-remove" id="removeUpload">Remove</button>
+      </div>
+      <div class="ocr-status" id="ocrStatus">Reading text from image...</div>
       <div class="examples">
         <span class="ex-label">Try an example:</span>
         <button class="ex-pill" onclick="loadExample('scam')">scam</button>
@@ -349,7 +389,7 @@
 
 <script>
   // ── Change this to your Railway URL once deployed ──
-  const API_URL = 'https://scamshield-yq85.onrender.com/scan';
+  const API_URL = 'http://127.0.0.1:8000/scan';
 
   const EXAMPLES = {
     scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
@@ -362,6 +402,69 @@
     document.getElementById('msg').value = EXAMPLES[type];
     document.getElementById('resultCard').classList.remove('visible');
     document.getElementById('errorMsg').textContent = '';
+    clearUpload();
+  }
+
+  // ── OCR / screenshot upload ──
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const previewImg = document.getElementById('previewImg');
+  const previewText = document.getElementById('previewText');
+  const ocrStatus = document.getElementById('ocrStatus');
+  const msgBox = document.getElementById('msg');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  document.getElementById('removeUpload').addEventListener('click', clearUpload);
+
+  function clearUpload() {
+    fileInput.value = '';
+    uploadPreview.classList.remove('visible');
+    ocrStatus.classList.remove('visible');
+  }
+
+  async function handleFile(file) {
+    if (!file.type.startsWith('image/')) {
+      document.getElementById('errorMsg').textContent = 'Please upload an image file (screenshot).';
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewText.textContent = file.name;
+    uploadPreview.classList.add('visible');
+    document.getElementById('errorMsg').textContent = '';
+
+    ocrStatus.textContent = 'Reading text from image...';
+    ocrStatus.classList.add('visible');
+
+    try {
+      const result = await Tesseract.recognize(file, 'eng+ara', {
+        logger: () => {} // suppress verbose logging
+      });
+      const text = result.data.text.trim();
+      if (text) {
+        msgBox.value = text;
+        ocrStatus.textContent = 'Text extracted — review it below, then scan.';
+      } else {
+        ocrStatus.textContent = 'No text found in image — try a clearer screenshot or paste manually.';
+      }
+    } catch (err) {
+      ocrStatus.textContent = 'Could not read image. Try pasting the text manually instead.';
+    }
   }
 
   async function scan() {
