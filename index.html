@@ -389,7 +389,7 @@
 
 <script>
   // ── Change this to your Railway URL once deployed ──
- const API_URL = 'https://scamshield-yq85.onrender.com/scan';
+  const API_URL = 'http://127.0.0.1:8000/scan';
 
   const EXAMPLES = {
     scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
@@ -506,7 +506,7 @@
     label.className = 'verdict-label ' + (isScam ? 'label-scam' : isSusp ? 'label-suspicious' : 'label-safe');
     label.textContent = data.result;
     document.getElementById('verdictReason').textContent = data.reason;
-    const maxScore = data.max_score || 10;
+    const maxScore = data.max_score || 100;
     const pct = Math.min(100, Math.round((data.score / maxScore) * 100));
     document.getElementById('scoreText').textContent = data.score + ' / ' + maxScore;
     const fill = document.getElementById('barFill');
