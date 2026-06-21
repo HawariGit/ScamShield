@@ -29,8 +29,10 @@ HF_MODEL = "Qwen/Qwen3.6-35B-A3B"
 AI_TIMEOUT_SECONDS = 6.0
 
 # Only call the AI when the rule-based score lands in this borderline zone (0-100 scale).
-# Below this -> confidently Safe. Above this -> confidently Scam. No AI needed either way.
-AI_REVIEW_LOWER = 15
+# Lower bound deliberately includes "low but not zero" scores too — some real scam
+# patterns (e.g. casual pretext + sensitive-info request) don't trip many keywords
+# but are still worth a second look. Below the lower bound = confidently Safe, no AI call.
+AI_REVIEW_LOWER = 8
 AI_REVIEW_UPPER = 55
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -54,6 +56,15 @@ SCAM_PHRASES_EN = [
     (r"won.*prize", 4), (r"send.*otp", 5), (r"confirm.*password", 4),
     (r"account.*blocked", 4), (r"unusual.*activity", 3), (r"update.*details", 3),
     (r"limited.*time", 2),
+    # Sensitive-info requests disguised as routine admin/HR asks — a real, common
+    # scam pattern that doesn't use classic "urgent/verify/click" keywords at all.
+    (r"confirm.*bank details", 6),
+    (r"send.*bank details", 6),
+    (r"confirm.*(card|account) number", 6),
+    (r"share.*bank details", 6),
+    (r"process.*(stipend|payment|salary).*before", 4),
+    (r"need you to confirm", 3),
+    (r"let me know if you have any questions", 1),  # mild — common in real AND fake HR messages
 ]
 
 # Phrases real institutions actually use that reduce false-positive risk.
