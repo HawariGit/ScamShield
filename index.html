@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ScamShield — Protect Yourself from Digital Scams</title>
+  <meta name="description" content="Instantly detect scam SMS and WhatsApp messages. Free AI-powered scam detector for Oman and the GCC."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #080c14;
+      --surface: #0e1420;
+      --surface2:#141c2e;
+      --border:  rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --text:    #e8ecf4;
+      --muted:   #6b7898;
+      --faint:   #2a3350;
+      --blue:    #2563eb;
+      --lblue:   #3b82f6;
+      --cyan:    #06b6d4;
+      --safe:    #22c55e;
+      --warn:    #f59e0b;
+      --danger:  #ef4444;
+      --display: 'Syne', sans-serif;
+      --serif:   'Instrument Serif', serif;
+      --mono:    'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--display); min-height: 100vh; overflow-x: hidden; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(8,12,20,0.85); backdrop-filter: blur(16px);
+      border-bottom: 0.5px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .shield-icon { width: 32px; height: 32px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .shield-icon svg { width: 18px; height: 18px; }
+    .nav-logo span { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.2s; font-family: var(--mono); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { font-size: 13px; font-family: var(--mono); padding: 7px 16px; border-radius: 6px; background: var(--blue); color: #fff; border: none; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 7rem 1.5rem 4rem; position: relative; overflow: hidden; text-align: center;
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+    .orb1 { width: 600px; height: 600px; background: rgba(37,99,235,0.12); top: -200px; left: -150px; animation: drift1 18s ease-in-out infinite; }
+    .orb2 { width: 400px; height: 400px; background: rgba(6,182,212,0.08); bottom: -100px; right: -100px; animation: drift2 22s ease-in-out infinite; }
+    .orb3 { width: 300px; height: 300px; background: rgba(37,99,235,0.07); top: 40%; left: 50%; transform: translate(-50%,-50%); animation: drift3 15s ease-in-out infinite; }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-60px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(-50%,-50%)} 50%{transform:translate(-45%,-55%)} }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 11px; color: var(--cyan);
+      border: 0.5px solid rgba(6,182,212,0.3); background: rgba(6,182,212,0.06);
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); display: inline-block; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    h1.hero-title { font-size: clamp(2.8rem,7vw,5.5rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; color: var(--text); max-width: 800px; animation: fadeUp 0.6s 0.1s ease both; }
+    h1.hero-title em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--cyan); }
+    .hero-sub { font-size: clamp(1rem,2vw,1.2rem); color: var(--muted); max-width: 520px; line-height: 1.65; margin-top: 1.25rem; font-family: var(--mono); animation: fadeUp 0.6s 0.2s ease both; }
+    .hero-btns { display: flex; gap: 12px; margin-top: 2rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.3s ease both; }
+    .btn-primary { padding: 13px 28px; font-size: 14px; font-weight: 600; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: opacity 0.2s, transform 0.1s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-ghost { padding: 13px 28px; font-size: 14px; font-weight: 600; background: transparent; color: var(--text); border: 0.5px solid var(--border2); border-radius: 8px; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+    .btn-ghost:hover { background: var(--surface); }
+    .hero-stats { display: flex; gap: 3rem; margin-top: 3.5rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.4s ease both; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+    .stat-label { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-top: 2px; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* SECTIONS */
+    .section { padding: 6rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .section-tag { font-family: var(--mono); font-size: 11px; color: var(--cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
+    .section-title { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text); line-height: 1.1; max-width: 600px; margin-bottom: 3rem; }
+
+    /* HOW IT WORKS */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .step-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.75rem; transition: border-color 0.2s; }
+    .step-card:hover { border-color: var(--border2); }
+    .step-num { font-family: var(--mono); font-size: 11px; color: var(--blue); font-weight: 500; letter-spacing: 0.08em; margin-bottom: 1rem; }
+    .step-card h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .step-card p { font-size: 13px; color: var(--muted); font-family: var(--mono); line-height: 1.65; }
+
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .feature-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s, background 0.2s; }
+    .feature-card:hover { border-color: var(--border2); background: var(--surface2); }
+    .feature-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 1rem; background: var(--surface2); }
+    .feature-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .feature-card p  { font-size: 12px; color: var(--muted); font-family: var(--mono); line-height: 1.6; }
+
+    /* SCAN TOOL */
+    #scan-tool { background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 30%, var(--surface) 70%, var(--bg) 100%); border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); padding: 6rem 1.5rem; }
+    .scan-inner { max-width: 680px; margin: 0 auto; }
+    .scan-inner .section-tag { text-align: center; }
+    .scan-inner .section-title { max-width: 100%; text-align: center; margin: 0 auto 0; }
+    .scan-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: 20px; padding: 2rem; margin-top: 2.5rem; }
+    .field-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    textarea { width: 100%; height: 120px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6; padding: 12px 14px; resize: none; transition: border-color 0.2s; }
+    textarea:focus { outline: none; border-color: var(--border2); }
+    textarea::placeholder { color: var(--faint); }
+    .examples { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 10px; margin-bottom: 1.25rem; }
+    .ex-label { font-size: 11px; font-family: var(--mono); color: var(--muted); }
+    .ex-pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .ex-pill:hover { border-color: var(--border2); color: var(--text); }
+    .scan-btn { width: 100%; padding: 13px; font-family: var(--display); font-size: 14px; font-weight: 700; background: var(--blue); color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .scan-btn:hover { opacity: 0.88; }
+    .scan-btn:active { transform: scale(0.99); }
+    .scan-btn.loading { opacity: 0.5; pointer-events: none; }
+    .result-card { margin-top: 1.25rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.5rem; display: none; animation: fadeUp 0.35s ease both; }
+    .result-card.visible { display: block; }
+    .verdict-row { display: flex; align-items: center; gap: 12px; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.25rem; }
+    .verdict-badge { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .badge-safe       { background: rgba(34,197,94,0.1);  color: var(--safe); }
+    .badge-suspicious { background: rgba(245,158,11,0.1); color: var(--warn); }
+    .badge-scam       { background: rgba(239,68,68,0.1);  color: var(--danger); }
+    .verdict-label { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+    .label-safe       { color: var(--safe); }
+    .label-suspicious { color: var(--warn); }
+    .label-scam       { color: var(--danger); }
+    .verdict-reason { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 3px; }
+    .score-section { margin-bottom: 1.25rem; }
+    .score-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .score-meta span:first-child { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .score-meta span:last-child  { font-size: 13px; font-family: var(--mono); font-weight: 500; color: var(--text); }
+    .bar-bg   { width: 100%; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+    .signals-label { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .signals-wrap  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sig-tag  { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 6px; background: rgba(245,158,11,0.1); color: var(--warn); border: 0.5px solid rgba(245,158,11,0.2); }
+    .sig-none { font-size: 13px; font-family: var(--mono); color: var(--faint); }
+    .error-msg { font-size: 12px; font-family: var(--mono); color: var(--danger); margin-top: 8px; min-height: 18px; }
+
+    /* WHY */
+    .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    @media (max-width: 700px) { .why-grid { grid-template-columns: 1fr; } }
+    .why-left h2 { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text); line-height: 1.1; margin-bottom: 1rem; }
+    .why-left h2 em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--cyan); }
+    .why-left p { font-size: 14px; color: var(--muted); font-family: var(--mono); line-height: 1.7; }
+    .why-right { display: flex; flex-direction: column; gap: 1rem; }
+    .why-item { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; gap: 12px; align-items: flex-start; }
+    .why-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); flex-shrink: 0; margin-top: 6px; }
+    .why-item h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .why-item p  { font-size: 12px; color: var(--muted); font-family: var(--mono); line-height: 1.6; }
+
+    /* FOOTER */
+    footer { border-top: 0.5px solid var(--border); padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .footer-logo { display: flex; align-items: center; gap: 8px; }
+    .footer-logo span { font-size: 15px; font-weight: 700; color: var(--text); }
+    .footer-copy { font-size: 12px; font-family: var(--mono); color: var(--muted); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { font-size: 12px; font-family: var(--mono); color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem; }
+      .nav-links { display: none; }
+      .hero-stats { gap: 2rem; }
+      footer { flex-direction: column; text-align: center; }
+    }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="shield-icon">
+      <svg viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L3 5.5V10C3 13.9 6.1 17.5 10 18.5C13.9 17.5 17 13.9 17 10V5.5L10 2Z" fill="white" fill-opacity="0.95"/>
+        <path d="M7 10L9.5 12.5L13.5 8" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span>ScamShield</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how-it-works">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#scan-tool">Try it</a>
+  </div>
+  <a href="#scan-tool" class="nav-cta">Scan a message →</a>
+</nav>
+
+<section class="hero">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div class="hero-badge"><span></span> Free scam detector — no sign up needed</div>
+
+  <h1 class="hero-title">Don't get scammed.<br>Get <em>protected.</em></h1>
+
+  <p class="hero-sub">Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything.</p>
+
+  <div class="hero-btns">
+    <a href="#scan-tool" class="btn-primary">Try it free →</a>
+    <a href="#how-it-works" class="btn-ghost">How it works</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">300%</div><div class="stat-label">Rise in GCC scams (2022–2024)</div></div>
+    <div class="stat"><div class="stat-num">OMR 4M+</div><div class="stat-label">Lost to fraud in Oman annually</div></div>
+    <div class="stat"><div class="stat-num">&lt;1s</div><div class="stat-label">Time to get a verdict</div></div>
+  </div>
+</section>
+
+<section id="how-it-works">
+  <div class="section reveal">
+    <div class="section-tag">How it works</div>
+    <h2 class="section-title">Three steps to stay safe</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01 — PASTE</div>
+        <h3>Copy the suspicious message</h3>
+        <p>Got a weird SMS from your "bank" or a WhatsApp message about winning a prize? Copy it.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02 — SCAN</div>
+        <h3>Our AI analyses it instantly</h3>
+        <p>ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03 — STAY SAFE</div>
+        <h3>Get a clear verdict</h3>
+        <p>Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section reveal">
+    <div class="section-tag">Features</div>
+    <h2 class="section-title">Built for real scams, not just demos</h2>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">⚡</div><h3>Instant results</h3><p>Verdict in under a second. No loading screens, no waiting.</p></div>
+      <div class="feature-card"><div class="feature-icon">🌐</div><h3>Arabic & English</h3><p>Scam patterns in both languages. Built specifically for Oman and the GCC.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔗</div><h3>Link detection</h3><p>Flags suspicious URLs and dangerous domains before you click them.</p></div>
+      <div class="feature-card"><div class="feature-icon">🛡️</div><h3>Bypass-resistant</h3><p>Detects leet speak and character substitutions scammers use to fool basic filters.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔒</div><h3>Private by default</h3><p>Your messages are never stored or shared. Scanned and discarded instantly.</p></div>
+      <div class="feature-card"><div class="feature-icon">📱</div><h3>Works on any device</h3><p>Phone, tablet, or desktop — no app download required.</p></div>
+    </div>
+  </div>
+</section>
+
+<div id="scan-tool">
+  <div class="scan-inner reveal">
+    <div class="section-tag" style="text-align:center">Try ScamShield</div>
+    <h2 class="section-title" style="text-align:center;max-width:100%;margin-bottom:0">Paste a message. Get the truth.</h2>
+    <div class="scan-card">
+      <div class="field-label">Message to analyse</div>
+      <textarea id="msg" placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" dir="auto"></textarea>
+      <div class="examples">
+        <span class="ex-label">Try an example:</span>
+        <button class="ex-pill" onclick="loadExample('scam')">scam</button>
+        <button class="ex-pill" onclick="loadExample('suspicious')">suspicious</button>
+        <button class="ex-pill" onclick="loadExample('safe')">safe</button>
+        <button class="ex-pill" onclick="loadExample('arabic')">عربي</button>
+      </div>
+      <button class="scan-btn" id="scanBtn" onclick="scan()">Scan message</button>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="result-card" id="resultCard">
+        <div class="verdict-row">
+          <div class="verdict-badge" id="verdictBadge"></div>
+          <div>
+            <div class="verdict-label" id="verdictLabel"></div>
+            <div class="verdict-reason" id="verdictReason"></div>
+          </div>
+        </div>
+        <div class="score-section">
+          <div class="score-meta"><span>Risk score</span><span id="scoreText"></span></div>
+          <div class="bar-bg"><div class="bar-fill" id="barFill"></div></div>
+        </div>
+        <div class="signals-label">Detected signals</div>
+        <div class="signals-wrap" id="signalsWrap"></div>
+
+        <div id="linksSection" style="display:none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 0.5px solid var(--border);">
+          <div class="signals-label">Links checked</div>
+          <div id="linksWrap" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div style="margin-top: 1rem; font-size: 11px; font-family: var(--mono); color: var(--faint);" id="langDetected"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="section reveal">
+    <div class="why-grid">
+      <div class="why-left">
+        <div class="section-tag">Why ScamShield</div>
+        <h2>Scams are a<br><em>local problem.</em><br>We're a local solution.</h2>
+        <p style="margin-top:1rem">Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use.</p>
+      </div>
+      <div class="why-right">
+        <div class="why-item"><div class="why-dot"></div><div><h4>No product like this exists in Oman</h4><p>Banks and telecoms have no real-time scam message detection. We're filling that gap.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4>Elderly users are the most targeted</h4><p>Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4>Free forever for individuals</h4><p>ScamShield will always be free for personal use. No sign up, no tracking, no ads.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4>API for banks & telecoms</h4><p>Financial institutions can embed ScamShield to protect their customers at scale.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">
+    <div class="shield-icon" style="width:28px;height:28px;border-radius:7px;">
+      <svg viewBox="0 0 20 20" fill="none" style="width:16px;height:16px">
+        <path d="M10 2L3 5.5V10C3 13.9 6.1 17.5 10 18.5C13.9 17.5 17 13.9 17 10V5.5L10 2Z" fill="white" fill-opacity="0.95"/>
+        <path d="M7 10L9.5 12.5L13.5 8" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span>ScamShield</span>
+  </div>
+  <div class="footer-copy">© 2026 ScamShield. Built in Oman.</div>
+  <div class="footer-links">
+    <a href="#scan-tool">Try it</a>
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+  </div>
+</footer>
+
+<script>
+  // ── Change this to your Railway URL once deployed ──
+  const API_URL = 'http://127.0.0.1:8000/scan';
+
+  const EXAMPLES = {
+    scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
+    suspicious: "Your account needs verification. Please click the link to confirm your details.",
+    safe: "Hi! Just confirming our meeting tomorrow at 3pm. Let me know if you need to reschedule.",
+    arabic: "تحذير عاجل: تم تعليق حسابك البنكي. اضغط هنا للتحقق من كلمة المرور فورا: http://bankmuscat-verify.xyz"
+  };
+
+  function loadExample(type) {
+    document.getElementById('msg').value = EXAMPLES[type];
+    document.getElementById('resultCard').classList.remove('visible');
+    document.getElementById('errorMsg').textContent = '';
+  }
+
+  async function scan() {
+    const text = document.getElementById('msg').value.trim();
+    if (!text) return;
+    const btn = document.getElementById('scanBtn');
+    btn.textContent = 'Scanning...';
+    btn.classList.add('loading');
+    document.getElementById('errorMsg').textContent = '';
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!res.ok) throw new Error('Server error ' + res.status);
+      const data = await res.json();
+      showResult(data);
+    } catch (e) {
+      document.getElementById('errorMsg').textContent =
+        'Could not reach backend. Make sure FastAPI is running on port 8000.';
+    } finally {
+      btn.textContent = 'Scan message';
+      btn.classList.remove('loading');
+    }
+  }
+
+  function showResult(data) {
+    const card = document.getElementById('resultCard');
+    card.classList.remove('visible');
+    void card.offsetWidth;
+    card.classList.add('visible');
+    const isScam = data.result === 'Scam';
+    const isSusp = data.result === 'Suspicious';
+    const badge = document.getElementById('verdictBadge');
+    badge.className = 'verdict-badge ' + (isScam ? 'badge-scam' : isSusp ? 'badge-suspicious' : 'badge-safe');
+    badge.textContent = isScam ? '!' : isSusp ? '?' : '✓';
+    const label = document.getElementById('verdictLabel');
+    label.className = 'verdict-label ' + (isScam ? 'label-scam' : isSusp ? 'label-suspicious' : 'label-safe');
+    label.textContent = data.result;
+    document.getElementById('verdictReason').textContent = data.reason;
+    const maxScore = data.max_score || 10;
+    const pct = Math.min(100, Math.round((data.score / maxScore) * 100));
+    document.getElementById('scoreText').textContent = data.score + ' / ' + maxScore;
+    const fill = document.getElementById('barFill');
+    fill.style.background = isScam ? 'var(--danger)' : isSusp ? 'var(--warn)' : 'var(--safe)';
+    setTimeout(() => { fill.style.width = pct + '%'; }, 30);
+    const wrap = document.getElementById('signalsWrap');
+    wrap.innerHTML = '';
+    if (data.signals && data.signals.length) {
+      data.signals.forEach(s => {
+        const tag = document.createElement('span');
+        tag.className = 'sig-tag';
+        tag.textContent = s;
+        wrap.appendChild(tag);
+      });
+    } else {
+      wrap.innerHTML = '<span class="sig-none">No signals detected</span>';
+    }
+
+    // Links analyzed
+    const linksSection = document.getElementById('linksSection');
+    const linksWrap = document.getElementById('linksWrap');
+    linksWrap.innerHTML = '';
+    if (data.links_analyzed && data.links_analyzed.length) {
+      linksSection.style.display = 'block';
+      data.links_analyzed.forEach(link => {
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--surface2); border:0.5px solid var(--border); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:11px;';
+        const statusColor = link.reachable === false ? 'var(--warn)' : (link.score > 0 ? 'var(--danger)' : 'var(--safe)');
+        row.innerHTML =
+          '<div style="color:var(--text); font-weight:600; margin-bottom:4px;">' + link.domain + '</div>' +
+          '<div style="color:' + statusColor + ';">' + (link.signals.length ? link.signals.join(', ') : 'no issues found') + '</div>';
+        linksWrap.appendChild(row);
+      });
+    } else {
+      linksSection.style.display = 'none';
+    }
+
+    // Language detected
+    const langEl = document.getElementById('langDetected');
+    if (data.language_detected === 'ar+en') {
+      langEl.textContent = 'Language detected: Arabic + English';
+    } else {
+      langEl.textContent = 'Language detected: English';
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
