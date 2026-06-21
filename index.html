@@ -389,8 +389,8 @@
 
 <script>
   // ── Change this to your Railway URL once deployed ──
-  const API_URL = 'https://scamshield-yq85.onrender.com/scan';
-  
+  const API_URL = 'http://127.0.0.1:8000/scan';
+
   const EXAMPLES = {
     scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
     suspicious: "Your account needs verification. Please click the link to confirm your details.",
@@ -546,11 +546,11 @@
 
     // Language detected
     const langEl = document.getElementById('langDetected');
-    if (data.language_detected === 'ar+en') {
-      langEl.textContent = 'Language detected: Arabic + English';
-    } else {
-      langEl.textContent = 'Language detected: English';
+    let langText = data.language_detected === 'ar+en' ? 'Language detected: Arabic + English' : 'Language detected: English';
+    if (data.ai_reviewed) {
+      langText += ' · Reviewed by AI (confidence: ' + (data.ai_confidence ?? '—') + '%)';
     }
+    langEl.textContent = langText;
   }
 
   const observer = new IntersectionObserver(
