@@ -40,6 +40,34 @@ SCAM_PHRASES_EN = [
     (r"limited.*time", 2),
 ]
 
+# Phrases real institutions actually use that reduce false-positive risk.
+# These don't "cancel out" scam signals entirely — they pull the score down
+# because their presence indicates more careful, typical legitimate copy.
+LEGIT_SIGNALS_EN = {
+    "if this wasn't you": -4,
+    "if this was not you": -4,
+    "no action is needed": -3,
+    "no action needed": -3,
+    "do not share this": -3,
+    "don't share this": -3,
+    "will expire in": -2,        # specific time-bound OTP language, not vague urgency
+    "for your security": -2,
+    "official website": -3,
+    "official number": -3,
+    "customer service": -2,
+    "terms and conditions": -2,
+    "unsubscribe": -2,
+    "privacy policy": -2,
+}
+
+# Known legitimate service domains — links to these reduce link-based suspicion
+TRUSTED_DOMAINS = {
+    "netflix.com", "google.com", "apple.com", "microsoft.com", "amazon.com",
+    "aramex.com", "track.aramex.com", "dhl.com", "fedex.com",
+    "bankmuscat.com", "omantel.om", "ooredoo.om", "nbo.om", "cbo.gov.om",
+    "paypal.com", "whatsapp.com", "instagram.com", "linkedin.com",
+}
+
 # ══════════════════════════════════════════════════════════════════════════
 # ARABIC NORMALIZATION + DETECTION
 # ══════════════════════════════════════════════════════════════════════════
@@ -96,6 +124,17 @@ SCAM_PHRASES_AR = [
     (r"حدث.*بياناتك", 3),        # update your data
     (r"عرض.*محدود", 2),          # limited offer
 ]
+
+# Arabic legit-context phrases that reduce false positives, mirroring English
+LEGIT_SIGNALS_AR = {
+    "اذا لم تكن انت": -4,         # if this wasn't you
+    "لا داعي لاي اجراء": -3,      # no action needed
+    "لا تشارك هذا الرمز": -3,     # don't share this code
+    "لحمايتك": -2,                # for your protection/security
+    "الموقع الرسمي": -3,          # official website
+    "الرقم الرسمي": -3,           # official number
+  "خدمه العملاء": -2,           # customer service
+}
 
 
 def contains_arabic(text: str) -> bool:
@@ -157,6 +196,14 @@ async def analyze_url(url: str) -> dict:
     """Fetch a URL with strict timeout/redirect limits and inspect the result."""
     domain = extract_domain(url)
     findings = {"domain": domain, "score": 0, "signals": []}
+
+    # Trusted domain: skip suspicion checks entirely, and treat as a meaningful
+    # legitimacy signal — a verified known destination genuinely lowers risk.
+    if domain in TRUSTED_DOMAINS:
+        findings["score"] = -4
+        findings["signals"].append("recognized trusted domain")
+        findings["reachable"] = True
+        return findings
 
     if domain in SHORTENER_DOMAINS:
         findings["score"] += 2
@@ -223,6 +270,12 @@ async def scan(message: Message):
             if label not in signals:
                 signals.append(label)
 
+    # English legit-context signals (reduce score, never below 0 overall)
+    for phrase, weight in LEGIT_SIGNALS_EN.items():
+        if phrase in normalized:
+            score += weight  # weight is negative
+            signals.append(f"+ {phrase}")
+
     # Arabic keyword + phrase scoring
     if has_arabic:
         for word, weight in SCAM_WORDS_AR.items():
@@ -235,6 +288,10 @@ async def scan(message: Message):
                 label = pattern.replace(".*", " + ")
                 if label not in signals:
                     signals.append(label)
+        for phrase, weight in LEGIT_SIGNALS_AR.items():
+            if phrase in normalized:
+                score += weight
+                signals.append(f"+ {phrase}")
 
     # Link extraction + analysis (pattern-level always; live fetch with timeout budget)
     urls = URL_PATTERN.findall(raw)
@@ -255,8 +312,9 @@ async def scan(message: Message):
 
     signals = list(dict.fromkeys(signals))
 
-    # Raw score is uncapped internally; convert to a 0-100 risk scale.
-    # Cap raw score at 25 (realistic ceiling given current weights) then scale to 100.
+    # Raw score is uncapped internally and can go negative from legit signals.
+    # Floor at 0, cap at 25 (realistic ceiling given current weights), scale to 100.
+    score = max(score, 0)
     raw_capped = min(score, 25)
     score_100 = round((raw_capped / 25) * 100)
 
