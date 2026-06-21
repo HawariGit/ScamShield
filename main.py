@@ -254,12 +254,16 @@ async def scan(message: Message):
             link_details.append(r)
 
     signals = list(dict.fromkeys(signals))
-    score = min(score, 20)
 
-    if score >= 8:
+    # Raw score is uncapped internally; convert to a 0-100 risk scale.
+    # Cap raw score at 25 (realistic ceiling given current weights) then scale to 100.
+    raw_capped = min(score, 25)
+    score_100 = round((raw_capped / 25) * 100)
+
+    if score_100 >= 40:
         result = "Scam"
         reason = "High-risk patterns detected — do not interact"
-    elif score >= 4:
+    elif score_100 >= 20:
         result = "Suspicious"
         reason = "Some scam signals found — proceed with caution"
     else:
@@ -268,10 +272,10 @@ async def scan(message: Message):
 
     return {
         "result": result,
-        "score": score,
+        "score": score_100,
         "signals": signals,
         "reason": reason,
-        "max_score": 10,
+        "max_score": 100,
         "language_detected": "ar+en" if has_arabic else "en",
         "links_analyzed": link_details,
     }
