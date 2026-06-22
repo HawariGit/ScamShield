@@ -209,6 +209,24 @@
 
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* Language toggle */
+    .lang-btn {
+      font-size: 12px; font-family: var(--mono);
+      padding: 5px 12px; border-radius: 6px;
+      border: 0.5px solid var(--border2);
+      background: transparent; color: var(--muted);
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .lang-btn:hover { color: var(--text); border-color: var(--text); }
+
+    /* RTL mode */
+    body.rtl { direction: rtl; }
+    body.rtl .nav-links { flex-direction: row-reverse; }
+    body.rtl .hero-stats { flex-direction: row-reverse; }
+    body.rtl .why-grid { direction: rtl; }
+    body.rtl .footer-links { flex-direction: row-reverse; }
+    body.rtl textarea { direction: rtl; text-align: right; font-family: 'IBM Plex Mono', 'Noto Sans Arabic', monospace; }
   </style>
 </head>
 <body>
@@ -224,11 +242,14 @@
     <span>ScamShield</span>
   </a>
   <div class="nav-links">
-    <a href="#how-it-works">How it works</a>
-    <a href="#features">Features</a>
-    <a href="#scan-tool">Try it</a>
+    <a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a>
+    <a href="#features" data-en="Features" data-ar="المميزات">Features</a>
+    <a href="#scan-tool" data-en="Try it" data-ar="جرّبه">Try it</a>
   </div>
-  <a href="#scan-tool" class="nav-cta">Scan a message →</a>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">العربية</button>
+    <a href="#scan-tool" class="nav-cta" data-en="Scan a message →" data-ar="افحص رسالة →">Scan a message →</a>
+  </div>
 </nav>
 
 <section class="hero">
@@ -236,43 +257,43 @@
   <div class="orb orb2"></div>
   <div class="orb orb3"></div>
 
-  <div class="hero-badge"><span></span> Free scam detector — no sign up needed</div>
+  <div class="hero-badge"><span></span> <span data-en="Free scam detector — no sign up needed" data-ar="كاشف نصب مجاني — بدون تسجيل">Free scam detector — no sign up needed</span></div>
 
-  <h1 class="hero-title">Don't get scammed.<br>Get <em>protected.</em></h1>
+  <h1 class="hero-title" data-en="Don't get scammed.<br>Get <em>protected.</em>" data-ar="لا تقع ضحية النصب.<br>احمِ <em>نفسك.</em>">Don't get scammed.<br>Get <em>protected.</em></h1>
 
-  <p class="hero-sub">Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything.</p>
+  <p class="hero-sub" data-en="Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything." data-ar="الصق أي رسالة مشبوهة من SMS أو واتساب. سيحللها ScamShield فوراً ويخبرك إذا كانت احتيالاً — قبل أن تضغط على أي شيء.">Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything.</p>
 
   <div class="hero-btns">
-    <a href="#scan-tool" class="btn-primary">Try it free →</a>
-    <a href="#how-it-works" class="btn-ghost">How it works</a>
+    <a href="#scan-tool" class="btn-primary" data-en="Try it free →" data-ar="جرّبه مجاناً →">Try it free →</a>
+    <a href="#how-it-works" class="btn-ghost" data-en="How it works" data-ar="كيف يعمل">How it works</a>
   </div>
 
   <div class="hero-stats">
-    <div class="stat"><div class="stat-num">300%</div><div class="stat-label">Rise in GCC scams (2022–2024)</div></div>
-    <div class="stat"><div class="stat-num">OMR 4M+</div><div class="stat-label">Lost to fraud in Oman annually</div></div>
-    <div class="stat"><div class="stat-num">&lt;1s</div><div class="stat-label">Time to get a verdict</div></div>
+    <div class="stat"><div class="stat-num">300%</div><div class="stat-label" data-en="Rise in GCC scams (2022–2024)" data-ar="ارتفاع في عمليات النصب بدول الخليج (٢٠٢٢–٢٠٢٤)">Rise in GCC scams (2022–2024)</div></div>
+    <div class="stat"><div class="stat-num">OMR 4M+</div><div class="stat-label" data-en="Lost to fraud in Oman annually" data-ar="خسائر الاحتيال في عُمان سنوياً">Lost to fraud in Oman annually</div></div>
+    <div class="stat"><div class="stat-num">&lt;1s</div><div class="stat-label" data-en="Time to get a verdict" data-ar="الوقت اللازم للحصول على نتيجة">Time to get a verdict</div></div>
   </div>
 </section>
 
 <section id="how-it-works">
   <div class="section reveal">
-    <div class="section-tag">How it works</div>
-    <h2 class="section-title">Three steps to stay safe</h2>
+    <div class="section-tag" data-en="How it works" data-ar="كيف يعمل">How it works</div>
+    <h2 class="section-title" data-en="Three steps to stay safe" data-ar="ثلاث خطوات للبقاء بأمان">Three steps to stay safe</h2>
     <div class="steps-grid">
       <div class="step-card">
-        <div class="step-num">01 — PASTE</div>
-        <h3>Copy the suspicious message</h3>
-        <p>Got a weird SMS from your "bank" or a WhatsApp message about winning a prize? Copy it.</p>
+        <div class="step-num" data-en="01 — PASTE" data-ar="٠١ — الصق">01 — PASTE</div>
+        <h3 data-en="Copy the suspicious message" data-ar="انسخ الرسالة المشبوهة">Copy the suspicious message</h3>
+        <p data-en="Got a weird SMS from your &quot;bank&quot; or a WhatsApp message about winning a prize? Copy it." data-ar="وصلتك رسالة غريبة من &quot;البنك&quot; أو رسالة واتساب عن جائزة؟ انسخها.">Got a weird SMS from your "bank" or a WhatsApp message about winning a prize? Copy it.</p>
       </div>
       <div class="step-card">
-        <div class="step-num">02 — SCAN</div>
-        <h3>Our AI analyses it instantly</h3>
-        <p>ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns.</p>
+        <div class="step-num" data-en="02 — SCAN" data-ar="٠٢ — افحص">02 — SCAN</div>
+        <h3 data-en="Our AI analyses it instantly" data-ar="يحللها الذكاء الاصطناعي فوراً">Our AI analyses it instantly</h3>
+        <p data-en="ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns." data-ar="يفحص ScamShield الكلمات المشبوهة والروابط الخطرة وأنماط الاحتيال المعروفة.">ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns.</p>
       </div>
       <div class="step-card">
-        <div class="step-num">03 — STAY SAFE</div>
-        <h3>Get a clear verdict</h3>
-        <p>Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert.</p>
+        <div class="step-num" data-en="03 — STAY SAFE" data-ar="٠٣ — ابقَ بأمان">03 — STAY SAFE</div>
+        <h3 data-en="Get a clear verdict" data-ar="احصل على نتيجة واضحة">Get a clear verdict</h3>
+        <p data-en="Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert." data-ar="آمنة أو مشبوهة أو احتيال — مع درجة المخاطرة والإشارات التي أطلقت التنبيه.">Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert.</p>
       </div>
     </div>
   </div>
@@ -280,26 +301,26 @@
 
 <section id="features">
   <div class="section reveal">
-    <div class="section-tag">Features</div>
-    <h2 class="section-title">Built for real scams, not just demos</h2>
+    <div class="section-tag" data-en="Features" data-ar="المميزات">Features</div>
+    <h2 class="section-title" data-en="Built for real scams, not just demos" data-ar="مبني لمواجهة عمليات النصب الحقيقية">Built for real scams, not just demos</h2>
     <div class="features-grid">
-      <div class="feature-card"><div class="feature-icon">⚡</div><h3>Instant results</h3><p>Verdict in under a second. No loading screens, no waiting.</p></div>
-      <div class="feature-card"><div class="feature-icon">🌐</div><h3>Arabic & English</h3><p>Scam patterns in both languages. Built specifically for Oman and the GCC.</p></div>
-      <div class="feature-card"><div class="feature-icon">🔗</div><h3>Link detection</h3><p>Flags suspicious URLs and dangerous domains before you click them.</p></div>
-      <div class="feature-card"><div class="feature-icon">🛡️</div><h3>Bypass-resistant</h3><p>Detects leet speak and character substitutions scammers use to fool basic filters.</p></div>
-      <div class="feature-card"><div class="feature-icon">🔒</div><h3>Private by default</h3><p>Your messages are never stored or shared. Scanned and discarded instantly.</p></div>
-      <div class="feature-card"><div class="feature-icon">📱</div><h3>Works on any device</h3><p>Phone, tablet, or desktop — no app download required.</p></div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><h3 data-en="Instant results" data-ar="نتائج فورية">Instant results</h3><p data-en="Verdict in under a second. No loading screens, no waiting." data-ar="نتيجة في أقل من ثانية. بدون انتظار.">Verdict in under a second. No loading screens, no waiting.</p></div>
+      <div class="feature-card"><div class="feature-icon">🌐</div><h3 data-en="Arabic & English" data-ar="العربية والإنجليزية">Arabic & English</h3><p data-en="Scam patterns in both languages. Built specifically for Oman and the GCC." data-ar="أنماط الاحتيال بكلتا اللغتين. مصمم خصيصاً لعُمان ودول الخليج.">Scam patterns in both languages. Built specifically for Oman and the GCC.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔗</div><h3 data-en="Link detection" data-ar="كشف الروابط">Link detection</h3><p data-en="Flags suspicious URLs and dangerous domains before you click them." data-ar="يكشف الروابط المشبوهة والنطاقات الخطرة قبل أن تضغط عليها.">Flags suspicious URLs and dangerous domains before you click them.</p></div>
+      <div class="feature-card"><div class="feature-icon">🛡️</div><h3 data-en="Bypass-resistant" data-ar="يصعب خداعه">Bypass-resistant</h3><p data-en="Detects leet speak and character substitutions scammers use to fool basic filters." data-ar="يكتشف تحايل المحتالين باستبدال الحروف والأرقام.">Detects leet speak and character substitutions scammers use to fool basic filters.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔒</div><h3 data-en="Private by default" data-ar="خاص بطبيعته">Private by default</h3><p data-en="Your messages are never stored or shared. Scanned and discarded instantly." data-ar="رسائلك لا تُحفظ ولا تُشارك. تُفحص وتُحذف فوراً.">Your messages are never stored or shared. Scanned and discarded instantly.</p></div>
+      <div class="feature-card"><div class="feature-icon">📱</div><h3 data-en="Works on any device" data-ar="يعمل على أي جهاز">Works on any device</h3><p data-en="Phone, tablet, or desktop — no app download required." data-ar="هاتف أو جهاز لوحي أو كمبيوتر — بدون تحميل أي تطبيق.">Phone, tablet, or desktop — no app download required.</p></div>
     </div>
   </div>
 </section>
 
 <div id="scan-tool">
   <div class="scan-inner reveal">
-    <div class="section-tag" style="text-align:center">Try ScamShield</div>
-    <h2 class="section-title" style="text-align:center;max-width:100%;margin-bottom:0">Paste a message. Get the truth.</h2>
+    <div class="section-tag" style="text-align:center" data-en="Try ScamShield" data-ar="جرّب ScamShield">Try ScamShield</div>
+    <h2 class="section-title" style="text-align:center;max-width:100%;margin-bottom:0" data-en="Paste a message. Get the truth." data-ar="الصق الرسالة. اعرف الحقيقة.">Paste a message. Get the truth.</h2>
     <div class="scan-card">
-      <div class="field-label">Message to analyse</div>
-      <textarea id="msg" placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" dir="auto"></textarea>
+      <div class="field-label" data-en="Message to analyse" data-ar="الرسالة المراد فحصها">Message to analyse</div>
+      <textarea id="msg" placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" dir="auto" data-en-placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" data-ar-placeholder="الصق رسالة SMS أو واتساب هنا..."></textarea>
 
       <div class="upload-zone" id="uploadZone">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto;display:block;">
@@ -317,13 +338,13 @@
       </div>
       <div class="ocr-status" id="ocrStatus">Reading text from image...</div>
       <div class="examples">
-        <span class="ex-label">Try an example:</span>
-        <button class="ex-pill" onclick="loadExample('scam')">scam</button>
-        <button class="ex-pill" onclick="loadExample('suspicious')">suspicious</button>
-        <button class="ex-pill" onclick="loadExample('safe')">safe</button>
+        <span class="ex-label" data-en="Try an example:" data-ar="جرّب مثالاً:">Try an example:</span>
+        <button class="ex-pill" onclick="loadExample('scam')" data-en="scam" data-ar="احتيال">scam</button>
+        <button class="ex-pill" onclick="loadExample('suspicious')" data-en="suspicious" data-ar="مشبوه">suspicious</button>
+        <button class="ex-pill" onclick="loadExample('safe')" data-en="safe" data-ar="آمن">safe</button>
         <button class="ex-pill" onclick="loadExample('arabic')">عربي</button>
       </div>
-      <button class="scan-btn" id="scanBtn" onclick="scan()">Scan message</button>
+      <button class="scan-btn" id="scanBtn" onclick="scan()" data-en="Scan message" data-ar="افحص الرسالة">Scan message</button>
       <div class="error-msg" id="errorMsg"></div>
       <div class="result-card" id="resultCard">
         <div class="verdict-row">
@@ -355,15 +376,15 @@
   <div class="section reveal">
     <div class="why-grid">
       <div class="why-left">
-        <div class="section-tag">Why ScamShield</div>
-        <h2>Scams are a<br><em>local problem.</em><br>We're a local solution.</h2>
-        <p style="margin-top:1rem">Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use.</p>
+        <div class="section-tag" data-en="Why ScamShield" data-ar="لماذا ScamShield">Why ScamShield</div>
+        <h2 data-en="Scams are a<br><em>local problem.</em><br>We're a local solution." data-ar="الاحتيال مشكلة <em>محلية.</em><br>ونحن الحل المحلي.">Scams are a<br><em>local problem.</em><br>We're a local solution.</h2>
+        <p style="margin-top:1rem" data-en="Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use." data-ar="معظم أدوات كشف الاحتيال مصممة للأسواق الغربية. ScamShield مصمم لعُمان — بأنماط من عمليات احتيال خليجية حقيقية، وباللغات التي يستخدمها أهل المنطقة.">Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use.</p>
       </div>
       <div class="why-right">
-        <div class="why-item"><div class="why-dot"></div><div><h4>No product like this exists in Oman</h4><p>Banks and telecoms have no real-time scam message detection. We're filling that gap.</p></div></div>
-        <div class="why-item"><div class="why-dot"></div><div><h4>Elderly users are the most targeted</h4><p>Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone.</p></div></div>
-        <div class="why-item"><div class="why-dot"></div><div><h4>Free forever for individuals</h4><p>ScamShield will always be free for personal use. No sign up, no tracking, no ads.</p></div></div>
-        <div class="why-item"><div class="why-dot"></div><div><h4>API for banks & telecoms</h4><p>Financial institutions can embed ScamShield to protect their customers at scale.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="No product like this exists in Oman" data-ar="لا يوجد منتج مماثل في عُمان">No product like this exists in Oman</h4><p data-en="Banks and telecoms have no real-time scam message detection. We're filling that gap." data-ar="البنوك وشركات الاتصالات لا تملك كشفاً فورياً لرسائل الاحتيال. نحن نسد هذه الفجوة.">Banks and telecoms have no real-time scam message detection. We're filling that gap.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="Elderly users are the most targeted" data-ar="كبار السن هم الأكثر استهدافاً">Elderly users are the most targeted</h4><p data-en="Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone." data-ar="نتائج واضحة وبسيطة (آمنة / مشبوهة / احتيال) مصممة ليفهمها الجميع.">Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="Free forever for individuals" data-ar="مجاني للأبد للأفراد">Free forever for individuals</h4><p data-en="ScamShield will always be free for personal use. No sign up, no tracking, no ads." data-ar="ScamShield مجاني دائماً للاستخدام الشخصي. بدون تسجيل أو تتبع أو إعلانات.">ScamShield will always be free for personal use. No sign up, no tracking, no ads.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="API for banks & telecoms" data-ar="واجهة برمجية للبنوك وشركات الاتصالات">API for banks & telecoms</h4><p data-en="Financial institutions can embed ScamShield to protect their customers at scale." data-ar="يمكن للمؤسسات المالية دمج ScamShield لحماية عملائها على نطاق واسع.">Financial institutions can embed ScamShield to protect their customers at scale.</p></div></div>
       </div>
     </div>
   </div>
@@ -379,18 +400,18 @@
     </div>
     <span>ScamShield</span>
   </div>
-  <div class="footer-copy">© 2026 ScamShield. Built in Oman.</div>
+  <div class="footer-copy" data-en="© 2026 ScamShield. Built in Oman." data-ar="© ٢٠٢٦ ScamShield. صُنع في عُمان.">© 2026 ScamShield. Built in Oman.</div>
   <div class="footer-links">
-    <a href="#scan-tool">Try it</a>
-    <a href="#features">Features</a>
-    <a href="#how-it-works">How it works</a>
+    <a href="#scan-tool" data-en="Try it" data-ar="جرّبه">Try it</a>
+    <a href="#features" data-en="Features" data-ar="المميزات">Features</a>
+    <a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a>
   </div>
 </footer>
 
 <script>
   // ── Change this to your Railway URL once deployed ──
  const API_URL = 'https://scamshield-yq85.onrender.com/scan';
-  
+
   const EXAMPLES = {
     scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
     suspicious: "Your account needs verification. Please click the link to confirm your details.",
@@ -560,6 +581,55 @@
     { threshold: 0.1 }
   );
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Language toggle ──
+  let currentLang = 'en';
+
+  function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'ar' : 'en';
+    const isAr = currentLang === 'ar';
+
+    // Toggle RTL on body
+    document.body.classList.toggle('rtl', isAr);
+    document.documentElement.setAttribute('lang', isAr ? 'ar' : 'en');
+
+    // Update toggle button label
+    document.getElementById('langToggle').textContent = isAr ? 'English' : 'العربية';
+
+    // Swap all data-en / data-ar text content
+    document.querySelectorAll('[data-en][data-ar]').forEach(el => {
+      const val = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+      if (!val) return;
+      // Handle elements with innerHTML (ones containing <br> or <em> tags)
+      if (val.includes('<')) {
+        el.innerHTML = val;
+      } else {
+        el.textContent = val;
+      }
+    });
+
+    // Swap textarea placeholder
+    const msgBox = document.getElementById('msg');
+    if (isAr) {
+      msgBox.placeholder = msgBox.getAttribute('data-ar-placeholder') || 'الصق رسالة SMS أو واتساب هنا...';
+    } else {
+      msgBox.placeholder = msgBox.getAttribute('data-en-placeholder') || 'Paste an SMS or WhatsApp message here...';
+    }
+
+    // Update scan button text if it currently shows "Scanning..." keep it or restore
+    const scanBtn = document.getElementById('scanBtn');
+    if (!scanBtn.classList.contains('loading')) {
+      scanBtn.textContent = isAr ? 'افحص الرسالة' : 'Scan message';
+    }
+
+    // Update upload zone text
+    const uploadZoneP = document.querySelector('.upload-zone p');
+    if (uploadZoneP) {
+      uploadZoneP.innerHTML = isAr
+        ? 'أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك'
+        : 'Drop a screenshot here or <span>browse</span> — we\'ll read the text for you';
+    }
+  }
 </script>
 </body>
 </html>
