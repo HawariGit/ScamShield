@@ -1,677 +1,635 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ScamShield — Premium Threat Detection</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ScamShield — Protect Yourself from Digital Scams</title>
+  <meta name="description" content="Instantly detect scam SMS and WhatsApp messages. Free AI-powered scam detector for Oman and the GCC."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #080c14;
+      --surface: #0e1420;
+      --surface2:#141c2e;
+      --border:  rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --text:    #e8ecf4;
+      --muted:   #6b7898;
+      --faint:   #2a3350;
+      --blue:    #2563eb;
+      --lblue:   #3b82f6;
+      --cyan:    #06b6d4;
+      --safe:    #22c55e;
+      --warn:    #f59e0b;
+      --danger:  #ef4444;
+      --display: 'Syne', sans-serif;
+      --serif:   'Instrument Serif', serif;
+      --mono:    'IBM Plex Mono', monospace;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--display); min-height: 100vh; overflow-x: hidden; }
 
-        :root {
-            --bg: #0a0a0c;
-            --surface: #111115;
-            --surface-secondary: #16161c;
-            --border: rgba(255, 255, 255, 0.06);
-            --border-hover: rgba(255, 255, 255, 0.12);
-            --text: #f3f4f6;
-            --text-muted: #8e939e;
-            --text-faint: #4b4e56;
-            --accent: #3b82f6;
-            --safe: #10b981;
-            --safe-dim: rgba(16, 185, 129, 0.06);
-            --warn: #f59e0b;
-            --warn-dim: rgba(245, 158, 11, 0.06);
-            --danger: #ef4444;
-            --danger-dim: rgba(239, 68, 68, 0.06);
-            --font-sans: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(8,12,20,0.85); backdrop-filter: blur(16px);
+      border-bottom: 0.5px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; }
+    .shield-icon { width: 32px; height: 32px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .shield-icon svg { width: 18px; height: 18px; }
+    .nav-logo span { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .nav-links { display: flex; align-items: center; gap: 2rem; }
+    .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.2s; font-family: var(--mono); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta { font-size: 13px; font-family: var(--mono); padding: 7px 16px; border-radius: 6px; background: var(--blue); color: #fff; border: none; cursor: pointer; text-decoration: none; transition: opacity 0.2s; }
+    .nav-cta:hover { opacity: 0.85; }
 
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: var(--font-sans);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            letter-spacing: -0.01em;
-        }
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 7rem 1.5rem 4rem; position: relative; overflow: hidden; text-align: center;
+    }
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+    .orb1 { width: 600px; height: 600px; background: rgba(37,99,235,0.12); top: -200px; left: -150px; animation: drift1 18s ease-in-out infinite; }
+    .orb2 { width: 400px; height: 400px; background: rgba(6,182,212,0.08); bottom: -100px; right: -100px; animation: drift2 22s ease-in-out infinite; }
+    .orb3 { width: 300px; height: 300px; background: rgba(37,99,235,0.07); top: 40%; left: 50%; transform: translate(-50%,-50%); animation: drift3 15s ease-in-out infinite; }
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,40px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,-60px)} }
+    @keyframes drift3 { 0%,100%{transform:translate(-50%,-50%)} 50%{transform:translate(-45%,-55%)} }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 11px; color: var(--cyan);
+      border: 0.5px solid rgba(6,182,212,0.3); background: rgba(6,182,212,0.06);
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); display: inline-block; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+    h1.hero-title { font-size: clamp(2.8rem,7vw,5.5rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; color: var(--text); max-width: 800px; animation: fadeUp 0.6s 0.1s ease both; }
+    h1.hero-title em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--cyan); }
+    .hero-sub { font-size: clamp(1rem,2vw,1.2rem); color: var(--muted); max-width: 520px; line-height: 1.65; margin-top: 1.25rem; font-family: var(--mono); animation: fadeUp 0.6s 0.2s ease both; }
+    .hero-btns { display: flex; gap: 12px; margin-top: 2rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.3s ease both; }
+    .btn-primary { padding: 13px 28px; font-size: 14px; font-weight: 600; background: var(--blue); color: #fff; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; transition: opacity 0.2s, transform 0.1s; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-ghost { padding: 13px 28px; font-size: 14px; font-weight: 600; background: transparent; color: var(--text); border: 0.5px solid var(--border2); border-radius: 8px; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+    .btn-ghost:hover { background: var(--surface); }
+    .hero-stats { display: flex; gap: 3rem; margin-top: 3.5rem; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.4s ease both; }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+    .stat-label { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-top: 2px; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
-        /* Nav Bar Layout */
-        nav {
-            width: 100%;
-            max-width: 1120px;
-            margin: 0 auto;
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-        }
+    /* SECTIONS */
+    .section { padding: 6rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .section-tag { font-family: var(--mono); font-size: 11px; color: var(--cyan); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1rem; }
+    .section-title { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text); line-height: 1.1; max-width: 600px; margin-bottom: 3rem; }
 
-        .logo-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    /* HOW IT WORKS */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .step-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.75rem; transition: border-color 0.2s; }
+    .step-card:hover { border-color: var(--border2); }
+    .step-num { font-family: var(--mono); font-size: 11px; color: var(--blue); font-weight: 500; letter-spacing: 0.08em; margin-bottom: 1rem; }
+    .step-card h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .step-card p { font-size: 13px; color: var(--muted); font-family: var(--mono); line-height: 1.65; }
 
-        .logo-icon {
-            color: var(--accent);
-        }
+    /* FEATURES */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .feature-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s, background 0.2s; }
+    .feature-card:hover { border-color: var(--border2); background: var(--surface2); }
+    .feature-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 1rem; background: var(--surface2); }
+    .feature-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .feature-card p  { font-size: 12px; color: var(--muted); font-family: var(--mono); line-height: 1.6; }
 
-        .logo-group h1 {
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
+    /* SCAN TOOL */
+    #scan-tool { background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 30%, var(--surface) 70%, var(--bg) 100%); border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); padding: 6rem 1.5rem; }
+    .scan-inner { max-width: 680px; margin: 0 auto; }
+    .scan-inner .section-tag { text-align: center; }
+    .scan-inner .section-title { max-width: 100%; text-align: center; margin: 0 auto 0; }
+    .scan-card { background: var(--bg); border: 0.5px solid var(--border2); border-radius: 20px; padding: 2rem; margin-top: 2.5rem; }
+    .field-label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    textarea { width: 100%; height: 120px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: var(--mono); font-size: 13px; line-height: 1.6; padding: 12px 14px; resize: none; transition: border-color 0.2s; }
+    textarea:focus { outline: none; border-color: var(--border2); }
+    textarea::placeholder { color: var(--faint); }
+    .examples { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 10px; margin-bottom: 1.25rem; }
+    .ex-label { font-size: 11px; font-family: var(--mono); color: var(--muted); }
+    .ex-pill { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .ex-pill:hover { border-color: var(--border2); color: var(--text); }
 
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+    .upload-zone {
+      border: 1.5px dashed var(--border2);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: var(--mono);
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--blue); background: rgba(37,99,235,0.05); }
+    .upload-zone svg { width: 20px; height: 20px; color: var(--muted); margin-bottom: 6px; }
+    .upload-zone p { font-size: 12px; color: var(--muted); }
+    .upload-zone p span { color: var(--lblue); }
+    .upload-zone input { display: none; }
+    .upload-preview { display: none; align-items: center; gap: 10px; margin-top: 10px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+    .upload-preview.visible { display: flex; }
+    .upload-preview img { width: 36px; height: 36px; object-fit: cover; border-radius: 5px; }
+    .upload-preview-text { flex: 1; font-size: 11px; font-family: var(--mono); color: var(--muted); }
+    .upload-preview-remove { font-size: 11px; font-family: var(--mono); color: var(--danger); cursor: pointer; background: none; border: none; }
+    .ocr-status { font-size: 11px; font-family: var(--mono); color: var(--cyan); margin-top: 8px; display: none; }
+    .ocr-status.visible { display: block; }
+    .scan-btn { width: 100%; padding: 13px; font-family: var(--display); font-size: 14px; font-weight: 700; background: var(--blue); color: #fff; border: none; border-radius: 10px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .scan-btn:hover { opacity: 0.88; }
+    .scan-btn:active { transform: scale(0.99); }
+    .scan-btn.loading { opacity: 0.5; pointer-events: none; }
+    .result-card { margin-top: 1.25rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.5rem; display: none; animation: fadeUp 0.35s ease both; }
+    .result-card.visible { display: block; }
+    .verdict-row { display: flex; align-items: center; gap: 12px; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.25rem; }
+    .verdict-badge { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+    .badge-safe       { background: rgba(34,197,94,0.1);  color: var(--safe); }
+    .badge-suspicious { background: rgba(245,158,11,0.1); color: var(--warn); }
+    .badge-scam       { background: rgba(239,68,68,0.1);  color: var(--danger); }
+    .verdict-label { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+    .label-safe       { color: var(--safe); }
+    .label-suspicious { color: var(--warn); }
+    .label-scam       { color: var(--danger); }
+    .verdict-reason { font-size: 12px; color: var(--muted); font-family: var(--mono); margin-top: 3px; }
+    .score-section { margin-bottom: 1.25rem; }
+    .score-meta { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .score-meta span:first-child { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .score-meta span:last-child  { font-size: 13px; font-family: var(--mono); font-weight: 500; color: var(--text); }
+    .bar-bg   { width: 100%; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+    .signals-label { font-size: 11px; font-family: var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .signals-wrap  { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sig-tag  { font-size: 11px; font-family: var(--mono); padding: 4px 10px; border-radius: 6px; background: rgba(245,158,11,0.1); color: var(--warn); border: 0.5px solid rgba(245,158,11,0.2); }
+    .sig-none { font-size: 13px; font-family: var(--mono); color: var(--faint); }
+    .error-msg { font-size: 12px; font-family: var(--mono); color: var(--danger); margin-top: 8px; min-height: 18px; }
 
-        .nav-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+    /* WHY */
+    .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    @media (max-width: 700px) { .why-grid { grid-template-columns: 1fr; } }
+    .why-left h2 { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text); line-height: 1.1; margin-bottom: 1rem; }
+    .why-left h2 em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--cyan); }
+    .why-left p { font-size: 14px; color: var(--muted); font-family: var(--mono); line-height: 1.7; }
+    .why-right { display: flex; flex-direction: column; gap: 1rem; }
+    .why-item { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; display: flex; gap: 12px; align-items: flex-start; }
+    .why-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); flex-shrink: 0; margin-top: 6px; }
+    .why-item h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .why-item p  { font-size: 12px; color: var(--muted); font-family: var(--mono); line-height: 1.6; }
 
-        .nav-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--text);
-        }
+    /* FOOTER */
+    footer { border-top: 0.5px solid var(--border); padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .footer-logo { display: flex; align-items: center; gap: 8px; }
+    .footer-logo span { font-size: 15px; font-weight: 700; color: var(--text); }
+    .footer-copy { font-size: 12px; font-family: var(--mono); color: var(--muted); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { font-size: 12px; font-family: var(--mono); color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
 
-        .nav-btn.primary {
-            background: var(--text);
-            color: var(--bg);
-            border: none;
-        }
+    @media (max-width: 600px) {
+      nav { padding: 1rem; }
+      .nav-links { display: none; }
+      .hero-stats { gap: 2rem; }
+      footer { flex-direction: column; text-align: center; }
+    }
 
-        .nav-btn.primary:hover {
-            background: #e5e7eb;
-        }
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
 
-        /* Main Workspace Container */
-        main {
-            flex: 1;
-            width: 100%;
-            max-width: 1120px;
-            margin: 3rem auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 3rem;
-        }
+    /* Language toggle */
+    .lang-btn {
+      font-size: 12px; font-family: var(--mono);
+      padding: 5px 12px; border-radius: 6px;
+      border: 0.5px solid var(--border2);
+      background: transparent; color: var(--muted);
+      cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+    }
+    .lang-btn:hover { color: var(--text); border-color: var(--text); }
 
-        @media (max-width: 900px) {
-            main {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-
-        .workspace-left {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        /* Premium Input Card */
-        .analyzer-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.75rem;
-        }
-
-        .section-meta {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.75rem;
-        }
-
-        textarea {
-            width: 100%;
-            height: 140px;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-family: var(--font-sans);
-            font-size: 15px;
-            line-height: 1.6;
-            resize: none;
-            margin-bottom: 1rem;
-        }
-
-        textarea:focus {
-            outline: none;
-        }
-
-        textarea::placeholder {
-            color: var(--text-faint);
-        }
-
-        .action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .quick-presets {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .preset-btn {
-            background: var(--surface-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .preset-btn:hover {
-            border-color: var(--border-hover);
-            color: var(--text);
-        }
-
-        .scan-btn {
-            background: var(--text);
-            color: var(--bg);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .scan-btn:hover {
-            opacity: 0.9;
-        }
-
-        .scan-btn.loading {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* High-End Result View */
-        .result-panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.75rem;
-            display: none;
-        }
-
-        .result-panel.active {
-            display: block;
-        }
-
-        .verdict-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-        }
-
-        .verdict-title {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
-
-        .verdict-sub {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .risk-badge {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-
-        /* Dynamic Verdict Styling */
-        .status-safe { color: var(--safe); background: var(--safe-dim); border: 1px solid rgba(16, 185, 129, 0.15); }
-        .status-suspicious { color: var(--warn); background: var(--warn-dim); border: 1px solid rgba(245, 158, 11, 0.15); }
-        .status-scam { color: var(--danger); background: var(--danger-dim); border: 1px solid rgba(239, 68, 68, 0.15); }
-
-        .metric-row {
-            margin-bottom: 1.5rem;
-        }
-
-        .metric-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 4px;
-            background: var(--surface-secondary);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-        }
-
-        .signals-container h4 {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .signals-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .signal-pill {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            background: var(--surface-secondary);
-            border: 1px solid var(--border);
-            padding: 3px 8px;
-            border-radius: 4px;
-            color: var(--text-muted);
-        }
-
-        .error-message {
-            font-size: 12px;
-            color: var(--danger);
-            font-family: var(--font-mono);
-            margin-top: 8px;
-        }
-
-        /* Sidebar Panels (History & Premium Conversion) */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .sidebar-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem;
-        }
-
-        .sidebar-card h3 {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: var(--text);
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border-radius: 6px;
-            background: var(--surface-secondary);
-            font-size: 12px;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
-
-        .history-item:hover {
-            border-color: var(--border);
-        }
-
-        .history-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 180px;
-            color: var(--text-muted);
-        }
-
-        .pro-banner {
-            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .pro-banner p {
-            font-size: 12px;
-            color: #c7d2fe;
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        /* Modals for Supabase Auth Integration */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            padding: 2rem;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 360px;
-        }
-
-        .modal-content h2 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            letter-spacing: -0.02em;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 11px;
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .form-group input {
-            width: 100%;
-            background: var(--surface-secondary);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .modal-footer-text {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 1rem;
-            text-align: center;
-        }
-
-        .modal-footer-text span {
-            color: var(--text);
-            cursor: pointer;
-            text-decoration: underline;
-        }
-    </style>
+    /* RTL mode */
+    body.rtl { direction: rtl; }
+    body.rtl .nav-links { flex-direction: row-reverse; }
+    body.rtl .hero-stats { flex-direction: row-reverse; }
+    body.rtl .why-grid { direction: rtl; }
+    body.rtl .footer-links { flex-direction: row-reverse; }
+    body.rtl textarea { direction: rtl; text-align: right; font-family: 'IBM Plex Mono', 'Noto Sans Arabic', monospace; }
+  </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo-group">
-            <svg class="logo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <h1>ScamShield</h1>
-        </div>
-        <div class="nav-actions">
-            <button class="nav-btn" onclick="toggleModal('authModal')">Sign In</button>
-            <button class="nav-btn primary" onclick="toggleModal('authModal')">Get Started</button>
-        </div>
-    </nav>
-
-    <main>
-        <div class="workspace-left">
-            <!-- Input Area -->
-            <div class="analyzer-card">
-                <div class="section-meta">Analyze Submissions</div>
-                <textarea id="msgInput" placeholder="Paste suspicious SMS or WhatsApp message content here..."></textarea>
-                
-                <div class="action-row">
-                    <div class="quick-presets">
-                        <span style="font-size: 12px; color: var(--text-faint);">Try:</span>
-                        <button class="preset-btn" onclick="loadSample('scam')">Scam</button>
-                        <button class="preset-btn" onclick="loadSample('suspicious')">Suspicious</button>
-                    </div>
-                    <button class="scan-btn" id="submitBtn" onclick="executeScan()">Verify Content</button>
-                </div>
-                <div class="error-message" id="errorContainer"></div>
-            </div>
-
-            <!-- Beautiful Minimalist Evaluation -->
-            <div class="result-panel" id="resultPanel">
-                <div class="verdict-header">
-                    <div>
-                        <div class="verdict-title" id="verdictTitle">Evaluating...</div>
-                        <div class="verdict-sub" id="verdictSub">Structural flags identified inside text blocks.</div>
-                    </div>
-                    <div class="risk-badge" id="verdictBadge">Pending</div>
-                </div>
-
-                <div class="metric-row">
-                    <div class="metric-label">
-                        <span>Risk Integrity Metric</span>
-                        <span id="scoreLabel">0 / 10</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                </div>
-
-                <div class="signals-container">
-                    <h4>Identified Trigger Indicators</h4>
-                    <div class="signals-tags" id="signalsTags">
-                        <!-- Instantiated dynamically -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar Components -->
-        <div class="sidebar">
-            <div class="sidebar-card pro-banner">
-                <h3 style="color: #fff;">Upgrade to Enterprise Shield</h3>
-                <p>Gain access to automated WhatsApp webhook relays, real-time URL link sandbox checking, and historical logging limits.</p>
-                <button class="nav-btn primary" style="width: 100%;" onclick="alert('Supabase Checkout / Stripe flow here')">Upgrade Account</button>
-            </div>
-
-            <div class="sidebar-card">
-                <h3>Verification History</h3>
-                <div class="history-list">
-                    <div class="history-item">
-                        <span class="history-text">Urgent: updates required immediately...</span>
-                        <span class="risk-badge status-scam" style="font-size: 9px; padding: 2px 6px;">Scam</span>
-                    </div>
-                    <div class="history-item">
-                        <span class="history-text">Hey, are we still meeting up later?</span>
-                        <span class="risk-badge status-safe" style="font-size: 9px; padding: 2px 6px;">Safe</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Supabase Auth Modal Placeholder -->
-    <div class="modal-overlay" id="authModal" onclick="closeModalOnOutsideClick(event)">
-        <div class="modal-content">
-            <h2 id="authModalTitle">Welcome back</h2>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" placeholder="name@company.com" id="authEmail" />
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" placeholder="••••••••" id="authPassword" />
-            </div>
-            <button class="scan-btn" style="width: 100%; margin-top: 0.5rem;" id="authSubmitBtn">Continue</button>
-            
-            <div class="modal-footer-text" id="authToggleText">
-                Don't have an account? <span onclick="toggleAuthMode()">Sign up</span>
-            </div>
-        </div>
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="shield-icon">
+      <svg viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L3 5.5V10C3 13.9 6.1 17.5 10 18.5C13.9 17.5 17 13.9 17 10V5.5L10 2Z" fill="white" fill-opacity="0.95"/>
+        <path d="M7 10L9.5 12.5L13.5 8" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
+    <span>ScamShield</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a>
+    <a href="#features" data-en="Features" data-ar="المميزات">Features</a>
+    <a href="#scan-tool" data-en="Try it" data-ar="جرّبه">Try it</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">العربية</button>
+    <a href="#scan-tool" class="nav-cta" data-en="Scan a message →" data-ar="افحص رسالة →">Scan a message →</a>
+  </div>
+</nav>
 
-    <script>
-        // Live production Render API link integrated cleanly
-        const API_URL = 'https://scamshield-yq85.onrender.com/scan';
+<section class="hero">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
 
-        const SAMPLES = {
-            scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
-            suspicious: "Your delivery is arriving. Please check details and confirm immediately here: http://bit.ly/track-pack"
-        };
+  <div class="hero-badge"><span></span> <span data-en="Free scam detector — no sign up needed" data-ar="كاشف نصب مجاني — بدون تسجيل">Free scam detector — no sign up needed</span></div>
 
-        function loadSample(key) {
-            document.getElementById('msgInput').value = SAMPLES[key];
-            document.getElementById('resultPanel').classList.remove('active');
-            document.getElementById('errorContainer').innerText = '';
-        }
+  <h1 class="hero-title" data-en="Don't get scammed.<br>Get <em>protected.</em>" data-ar="لا تقع ضحية النصب.<br>احمِ <em>نفسك.</em>">Don't get scammed.<br>Get <em>protected.</em></h1>
 
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('active');
-        }
+  <p class="hero-sub" data-en="Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything." data-ar="الصق أي رسالة مشبوهة من SMS أو واتساب. سيحللها ScamShield فوراً ويخبرك إذا كانت احتيالاً — قبل أن تضغط على أي شيء.">Paste any suspicious SMS or WhatsApp message. ScamShield analyses it instantly and tells you if it's a scam — before you click anything.</p>
 
-        function closeModalOnOutsideClick(e) {
-            if(e.target.classList.contains('modal-overlay')) {
-                e.target.classList.remove('active');
-            }
-        }
+  <div class="hero-btns">
+    <a href="#scan-tool" class="btn-primary" data-en="Try it free →" data-ar="جرّبه مجاناً →">Try it free →</a>
+    <a href="#how-it-works" class="btn-ghost" data-en="How it works" data-ar="كيف يعمل">How it works</a>
+  </div>
 
-        let isSignUp = false;
-        function toggleAuthMode() {
-            isSignUp = !isSignUp;
-            document.getElementById('authModalTitle').innerText = isSignUp ? "Create your account" : "Welcome back";
-            document.getElementById('authToggleText').innerHTML = isSignUp ? 
-                `Already have an account? <span onclick="toggleAuthMode()">Sign in</span>` : 
-                `Don't have an account? <span onclick="toggleAuthMode()">Sign up</span>`;
-        }
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">300%</div><div class="stat-label" data-en="Rise in GCC scams (2022–2024)" data-ar="ارتفاع في عمليات النصب بدول الخليج (٢٠٢٢–٢٠٢٤)">Rise in GCC scams (2022–2024)</div></div>
+    <div class="stat"><div class="stat-num">OMR 4M+</div><div class="stat-label" data-en="Lost to fraud in Oman annually" data-ar="خسائر الاحتيال في عُمان سنوياً">Lost to fraud in Oman annually</div></div>
+    <div class="stat"><div class="stat-num">&lt;1s</div><div class="stat-label" data-en="Time to get a verdict" data-ar="الوقت اللازم للحصول على نتيجة">Time to get a verdict</div></div>
+  </div>
+</section>
 
-        async function executeScan() {
-            const val = document.getElementById('msgInput').value.trim();
-            if(!val) return;
+<section id="how-it-works">
+  <div class="section reveal">
+    <div class="section-tag" data-en="How it works" data-ar="كيف يعمل">How it works</div>
+    <h2 class="section-title" data-en="Three steps to stay safe" data-ar="ثلاث خطوات للبقاء بأمان">Three steps to stay safe</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num" data-en="01 — PASTE" data-ar="٠١ — الصق">01 — PASTE</div>
+        <h3 data-en="Copy the suspicious message" data-ar="انسخ الرسالة المشبوهة">Copy the suspicious message</h3>
+        <p data-en="Got a weird SMS from your &quot;bank&quot; or a WhatsApp message about winning a prize? Copy it." data-ar="وصلتك رسالة غريبة من &quot;البنك&quot; أو رسالة واتساب عن جائزة؟ انسخها.">Got a weird SMS from your "bank" or a WhatsApp message about winning a prize? Copy it.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" data-en="02 — SCAN" data-ar="٠٢ — افحص">02 — SCAN</div>
+        <h3 data-en="Our AI analyses it instantly" data-ar="يحللها الذكاء الاصطناعي فوراً">Our AI analyses it instantly</h3>
+        <p data-en="ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns." data-ar="يفحص ScamShield الكلمات المشبوهة والروابط الخطرة وأنماط الاحتيال المعروفة.">ScamShield checks for scam keywords, suspicious phrases, dangerous links, and known fraud patterns.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num" data-en="03 — STAY SAFE" data-ar="٠٣ — ابقَ بأمان">03 — STAY SAFE</div>
+        <h3 data-en="Get a clear verdict" data-ar="احصل على نتيجة واضحة">Get a clear verdict</h3>
+        <p data-en="Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert." data-ar="آمنة أو مشبوهة أو احتيال — مع درجة المخاطرة والإشارات التي أطلقت التنبيه.">Safe, Suspicious, or Scam — with a risk score and the exact signals that triggered the alert.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-            const btn = document.getElementById('submitBtn');
-            const errBox = document.getElementById('errorContainer');
-            const panel = document.getElementById('resultPanel');
-            
-            btn.innerText = "Verifying...";
-            btn.classList.add('loading');
-            errBox.innerText = '';
+<section id="features">
+  <div class="section reveal">
+    <div class="section-tag" data-en="Features" data-ar="المميزات">Features</div>
+    <h2 class="section-title" data-en="Built for real scams, not just demos" data-ar="مبني لمواجهة عمليات النصب الحقيقية">Built for real scams, not just demos</h2>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">⚡</div><h3 data-en="Instant results" data-ar="نتائج فورية">Instant results</h3><p data-en="Verdict in under a second. No loading screens, no waiting." data-ar="نتيجة في أقل من ثانية. بدون انتظار.">Verdict in under a second. No loading screens, no waiting.</p></div>
+      <div class="feature-card"><div class="feature-icon">🌐</div><h3 data-en="Arabic & English" data-ar="العربية والإنجليزية">Arabic & English</h3><p data-en="Scam patterns in both languages. Built specifically for Oman and the GCC." data-ar="أنماط الاحتيال بكلتا اللغتين. مصمم خصيصاً لعُمان ودول الخليج.">Scam patterns in both languages. Built specifically for Oman and the GCC.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔗</div><h3 data-en="Link detection" data-ar="كشف الروابط">Link detection</h3><p data-en="Flags suspicious URLs and dangerous domains before you click them." data-ar="يكشف الروابط المشبوهة والنطاقات الخطرة قبل أن تضغط عليها.">Flags suspicious URLs and dangerous domains before you click them.</p></div>
+      <div class="feature-card"><div class="feature-icon">🛡️</div><h3 data-en="Bypass-resistant" data-ar="يصعب خداعه">Bypass-resistant</h3><p data-en="Detects leet speak and character substitutions scammers use to fool basic filters." data-ar="يكتشف تحايل المحتالين باستبدال الحروف والأرقام.">Detects leet speak and character substitutions scammers use to fool basic filters.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔒</div><h3 data-en="Private by default" data-ar="خاص بطبيعته">Private by default</h3><p data-en="Your messages are never stored or shared. Scanned and discarded instantly." data-ar="رسائلك لا تُحفظ ولا تُشارك. تُفحص وتُحذف فوراً.">Your messages are never stored or shared. Scanned and discarded instantly.</p></div>
+      <div class="feature-card"><div class="feature-icon">📱</div><h3 data-en="Works on any device" data-ar="يعمل على أي جهاز">Works on any device</h3><p data-en="Phone, tablet, or desktop — no app download required." data-ar="هاتف أو جهاز لوحي أو كمبيوتر — بدون تحميل أي تطبيق.">Phone, tablet, or desktop — no app download required.</p></div>
+    </div>
+  </div>
+</section>
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: val })
-                });
-                
-                if (!response.ok) throw new Error('Server returned an unhandled error ' + response.status);
-                
-                const data = await response.json();
-                panel.classList.add('active');
-                renderResult(data);
-            } catch (err) {
-                errBox.innerText = "Unable to route request to Render cloud network. Check if deployment is active.";
-                panel.classList.remove('active');
-            } finally {
-                btn.innerText = "Verify Content";
-                btn.classList.remove('loading');
-            }
-        }
+<div id="scan-tool">
+  <div class="scan-inner reveal">
+    <div class="section-tag" style="text-align:center" data-en="Try ScamShield" data-ar="جرّب ScamShield">Try ScamShield</div>
+    <h2 class="section-title" style="text-align:center;max-width:100%;margin-bottom:0" data-en="Paste a message. Get the truth." data-ar="الصق الرسالة. اعرف الحقيقة.">Paste a message. Get the truth.</h2>
+    <div class="scan-card">
+      <div class="field-label" data-en="Message to analyse" data-ar="الرسالة المراد فحصها">Message to analyse</div>
+      <textarea id="msg" placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" dir="auto" data-en-placeholder="Paste an SMS or WhatsApp message here... (Arabic & English supported)" data-ar-placeholder="الصق رسالة SMS أو واتساب هنا..."></textarea>
 
-        function renderResult(data) {
-            const title = document.getElementById('verdictTitle');
-            const sub = document.getElementById('verdictSub');
-            const badge = document.getElementById('verdictBadge');
-            const fill = document.getElementById('progressFill');
-            const label = document.getElementById('scoreLabel');
-            const tags = document.getElementById('signalsTags');
+      <div class="upload-zone" id="uploadZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto;display:block;">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <p>Drop a screenshot here or <span>browse</span> — we'll read the text for you</p>
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      <div class="upload-preview" id="uploadPreview">
+        <img id="previewImg" src="" alt="">
+        <span class="upload-preview-text" id="previewText">image.png</span>
+        <button class="upload-preview-remove" id="removeUpload">Remove</button>
+      </div>
+      <div class="ocr-status" id="ocrStatus">Reading text from image...</div>
+      <div class="examples">
+        <span class="ex-label" data-en="Try an example:" data-ar="جرّب مثالاً:">Try an example:</span>
+        <button class="ex-pill" onclick="loadExample('scam')" data-en="scam" data-ar="احتيال">scam</button>
+        <button class="ex-pill" onclick="loadExample('suspicious')" data-en="suspicious" data-ar="مشبوه">suspicious</button>
+        <button class="ex-pill" onclick="loadExample('safe')" data-en="safe" data-ar="آمن">safe</button>
+        <button class="ex-pill" onclick="loadExample('arabic')">عربي</button>
+      </div>
+      <button class="scan-btn" id="scanBtn" onclick="scan()" data-en="Scan message" data-ar="افحص الرسالة">Scan message</button>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="result-card" id="resultCard">
+        <div class="verdict-row">
+          <div class="verdict-badge" id="verdictBadge"></div>
+          <div>
+            <div class="verdict-label" id="verdictLabel"></div>
+            <div class="verdict-reason" id="verdictReason"></div>
+          </div>
+        </div>
+        <div class="score-section">
+          <div class="score-meta"><span>Risk score</span><span id="scoreText"></span></div>
+          <div class="bar-bg"><div class="bar-fill" id="barFill"></div></div>
+        </div>
+        <div class="signals-label">Detected signals</div>
+        <div class="signals-wrap" id="signalsWrap"></div>
 
-            title.innerText = data.result;
-            sub.innerText = data.reason;
-            label.innerText = `${data.score} / ${data.max_score || 10}`;
-            
-            badge.className = "risk-badge";
-            const resLower = data.result.toLowerCase();
-            if (resLower.includes('scam')) {
-                badge.classList.add('status-scam');
-                fill.style.background = 'var(--danger)';
-            } else if (resLower.includes('suspicious')) {
-                badge.classList.add('status-suspicious');
-                fill.style.background = 'var(--warn)';
-            } else {
-                badge.classList.add('status-safe');
-                fill.style.background = 'var(--safe)';
-            }
-            badge.innerText = data.result;
+        <div id="linksSection" style="display:none; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 0.5px solid var(--border);">
+          <div class="signals-label">Links checked</div>
+          <div id="linksWrap" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
 
-            const pct = Math.min(100, Math.round((data.score / (data.max_score || 10)) * 100));
-            // Tiny timeout for smooth width transitions
-            setTimeout(() => { fill.style.width = `${pct}%`; }, 30);
+        <div style="margin-top: 1rem; font-size: 11px; font-family: var(--mono); color: var(--faint);" id="langDetected"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-            tags.innerHTML = '';
-            if(data.signals && data.signals.length) {
-                data.signals.forEach(sig => {
-                    const el = document.createElement('span');
-                    el.className = 'signal-pill';
-                    el.innerText = sig;
-                    tags.appendChild(el);
-                });
-            } else {
-                tags.innerHTML = `<span style="font-size:12px; color:var(--text-faint);">No threat vectors flagged</span>`;
-            }
-        }
-    </script>
+<section>
+  <div class="section reveal">
+    <div class="why-grid">
+      <div class="why-left">
+        <div class="section-tag" data-en="Why ScamShield" data-ar="لماذا ScamShield">Why ScamShield</div>
+        <h2 data-en="Scams are a<br><em>local problem.</em><br>We're a local solution." data-ar="الاحتيال مشكلة <em>محلية.</em><br>ونحن الحل المحلي.">Scams are a<br><em>local problem.</em><br>We're a local solution.</h2>
+        <p style="margin-top:1rem" data-en="Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use." data-ar="معظم أدوات كشف الاحتيال مصممة للأسواق الغربية. ScamShield مصمم لعُمان — بأنماط من عمليات احتيال خليجية حقيقية، وباللغات التي يستخدمها أهل المنطقة.">Most scam detectors are built for Western markets. ScamShield is built for Oman — with patterns from real GCC scams, in the languages people here actually use.</p>
+      </div>
+      <div class="why-right">
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="No product like this exists in Oman" data-ar="لا يوجد منتج مماثل في عُمان">No product like this exists in Oman</h4><p data-en="Banks and telecoms have no real-time scam message detection. We're filling that gap." data-ar="البنوك وشركات الاتصالات لا تملك كشفاً فورياً لرسائل الاحتيال. نحن نسد هذه الفجوة.">Banks and telecoms have no real-time scam message detection. We're filling that gap.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="Elderly users are the most targeted" data-ar="كبار السن هم الأكثر استهدافاً">Elderly users are the most targeted</h4><p data-en="Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone." data-ar="نتائج واضحة وبسيطة (آمنة / مشبوهة / احتيال) مصممة ليفهمها الجميع.">Simple, clear verdicts (Safe / Suspicious / Scam) are designed to be understood by anyone.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="Free forever for individuals" data-ar="مجاني للأبد للأفراد">Free forever for individuals</h4><p data-en="ScamShield will always be free for personal use. No sign up, no tracking, no ads." data-ar="ScamShield مجاني دائماً للاستخدام الشخصي. بدون تسجيل أو تتبع أو إعلانات.">ScamShield will always be free for personal use. No sign up, no tracking, no ads.</p></div></div>
+        <div class="why-item"><div class="why-dot"></div><div><h4 data-en="API for banks & telecoms" data-ar="واجهة برمجية للبنوك وشركات الاتصالات">API for banks & telecoms</h4><p data-en="Financial institutions can embed ScamShield to protect their customers at scale." data-ar="يمكن للمؤسسات المالية دمج ScamShield لحماية عملائها على نطاق واسع.">Financial institutions can embed ScamShield to protect their customers at scale.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">
+    <div class="shield-icon" style="width:28px;height:28px;border-radius:7px;">
+      <svg viewBox="0 0 20 20" fill="none" style="width:16px;height:16px">
+        <path d="M10 2L3 5.5V10C3 13.9 6.1 17.5 10 18.5C13.9 17.5 17 13.9 17 10V5.5L10 2Z" fill="white" fill-opacity="0.95"/>
+        <path d="M7 10L9.5 12.5L13.5 8" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span>ScamShield</span>
+  </div>
+  <div class="footer-copy" data-en="© 2026 ScamShield. Built in Oman." data-ar="© ٢٠٢٦ ScamShield. صُنع في عُمان.">© 2026 ScamShield. Built in Oman.</div>
+  <div class="footer-links">
+    <a href="#scan-tool" data-en="Try it" data-ar="جرّبه">Try it</a>
+    <a href="#features" data-en="Features" data-ar="المميزات">Features</a>
+    <a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a>
+  </div>
+</footer>
+
+<script>
+  // ── Change this to your Railway URL once deployed ──
+ const API_URL = 'https://scamshield-yq85.onrender.com/scan';
+
+  const EXAMPLES = {
+    scam: "URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz",
+    suspicious: "Your account needs verification. Please click the link to confirm your details.",
+    safe: "Hi! Just confirming our meeting tomorrow at 3pm. Let me know if you need to reschedule.",
+    arabic: "تحذير عاجل: تم تعليق حسابك البنكي. اضغط هنا للتحقق من كلمة المرور فورا: http://bankmuscat-verify.xyz"
+  };
+
+  function loadExample(type) {
+    document.getElementById('msg').value = EXAMPLES[type];
+    document.getElementById('resultCard').classList.remove('visible');
+    document.getElementById('errorMsg').textContent = '';
+    clearUpload();
+  }
+
+  // ── OCR / screenshot upload ──
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const previewImg = document.getElementById('previewImg');
+  const previewText = document.getElementById('previewText');
+  const ocrStatus = document.getElementById('ocrStatus');
+  const msgBox = document.getElementById('msg');
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  document.getElementById('removeUpload').addEventListener('click', clearUpload);
+
+  function clearUpload() {
+    fileInput.value = '';
+    uploadPreview.classList.remove('visible');
+    ocrStatus.classList.remove('visible');
+  }
+
+  async function handleFile(file) {
+    if (!file.type.startsWith('image/')) {
+      document.getElementById('errorMsg').textContent = 'Please upload an image file (screenshot).';
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewText.textContent = file.name;
+    uploadPreview.classList.add('visible');
+    document.getElementById('errorMsg').textContent = '';
+
+    ocrStatus.textContent = 'Reading text from image...';
+    ocrStatus.classList.add('visible');
+
+    try {
+      const result = await Tesseract.recognize(file, 'eng+ara', {
+        logger: () => {} // suppress verbose logging
+      });
+      const text = result.data.text.trim();
+      if (text) {
+        msgBox.value = text;
+        ocrStatus.textContent = 'Text extracted — review it below, then scan.';
+      } else {
+        ocrStatus.textContent = 'No text found in image — try a clearer screenshot or paste manually.';
+      }
+    } catch (err) {
+      ocrStatus.textContent = 'Could not read image. Try pasting the text manually instead.';
+    }
+  }
+
+  async function scan() {
+    const text = document.getElementById('msg').value.trim();
+    if (!text) return;
+    const btn = document.getElementById('scanBtn');
+    btn.textContent = 'Scanning...';
+    btn.classList.add('loading');
+    document.getElementById('errorMsg').textContent = '';
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (!res.ok) throw new Error('Server error ' + res.status);
+      const data = await res.json();
+      showResult(data);
+    } catch (e) {
+      document.getElementById('errorMsg').textContent =
+        'Could not reach backend. Make sure FastAPI is running on port 8000.';
+    } finally {
+      btn.textContent = 'Scan message';
+      btn.classList.remove('loading');
+    }
+  }
+
+  function showResult(data) {
+    const card = document.getElementById('resultCard');
+    card.classList.remove('visible');
+    void card.offsetWidth;
+    card.classList.add('visible');
+    const isScam = data.result === 'Scam';
+    const isSusp = data.result === 'Suspicious';
+    const badge = document.getElementById('verdictBadge');
+    badge.className = 'verdict-badge ' + (isScam ? 'badge-scam' : isSusp ? 'badge-suspicious' : 'badge-safe');
+    badge.textContent = isScam ? '!' : isSusp ? '?' : '✓';
+    const label = document.getElementById('verdictLabel');
+    label.className = 'verdict-label ' + (isScam ? 'label-scam' : isSusp ? 'label-suspicious' : 'label-safe');
+    label.textContent = data.result;
+    document.getElementById('verdictReason').textContent = data.reason;
+    const maxScore = data.max_score || 100;
+    const pct = Math.min(100, Math.round((data.score / maxScore) * 100));
+    document.getElementById('scoreText').textContent = data.score + ' / ' + maxScore;
+    const fill = document.getElementById('barFill');
+    fill.style.background = isScam ? 'var(--danger)' : isSusp ? 'var(--warn)' : 'var(--safe)';
+    setTimeout(() => { fill.style.width = pct + '%'; }, 30);
+    const wrap = document.getElementById('signalsWrap');
+    wrap.innerHTML = '';
+    if (data.signals && data.signals.length) {
+      data.signals.forEach(s => {
+        const tag = document.createElement('span');
+        tag.className = 'sig-tag';
+        tag.textContent = s;
+        wrap.appendChild(tag);
+      });
+    } else {
+      wrap.innerHTML = '<span class="sig-none">No signals detected</span>';
+    }
+
+    // Links analyzed
+    const linksSection = document.getElementById('linksSection');
+    const linksWrap = document.getElementById('linksWrap');
+    linksWrap.innerHTML = '';
+    if (data.links_analyzed && data.links_analyzed.length) {
+      linksSection.style.display = 'block';
+      data.links_analyzed.forEach(link => {
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--surface2); border:0.5px solid var(--border); border-radius:8px; padding:10px 12px; font-family:var(--mono); font-size:11px;';
+        const statusColor = link.reachable === false ? 'var(--warn)' : (link.score > 0 ? 'var(--danger)' : 'var(--safe)');
+        row.innerHTML =
+          '<div style="color:var(--text); font-weight:600; margin-bottom:4px;">' + link.domain + '</div>' +
+          '<div style="color:' + statusColor + ';">' + (link.signals.length ? link.signals.join(', ') : 'no issues found') + '</div>';
+        linksWrap.appendChild(row);
+      });
+    } else {
+      linksSection.style.display = 'none';
+    }
+
+    // Language detected
+    const langEl = document.getElementById('langDetected');
+    let langText = data.language_detected === 'ar+en' ? 'Language detected: Arabic + English' : 'Language detected: English';
+    if (data.ai_reviewed) {
+      langText += ' · Reviewed by AI (confidence: ' + (data.ai_confidence ?? '—') + '%)';
+    } else if (data.ai_budget && data.ai_budget.remaining === 0) {
+      langText += ' · AI review unavailable today (daily limit reached) — rule-based result shown';
+    }
+    langEl.textContent = langText;
+  }
+
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Language toggle ──
+  let currentLang = 'en';
+
+  function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'ar' : 'en';
+    const isAr = currentLang === 'ar';
+
+    // Toggle RTL on body
+    document.body.classList.toggle('rtl', isAr);
+    document.documentElement.setAttribute('lang', isAr ? 'ar' : 'en');
+
+    // Update toggle button label
+    document.getElementById('langToggle').textContent = isAr ? 'English' : 'العربية';
+
+    // Swap all data-en / data-ar text content
+    document.querySelectorAll('[data-en][data-ar]').forEach(el => {
+      const val = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+      if (!val) return;
+      // Handle elements with innerHTML (ones containing <br> or <em> tags)
+      if (val.includes('<')) {
+        el.innerHTML = val;
+      } else {
+        el.textContent = val;
+      }
+    });
+
+    // Swap textarea placeholder
+    const msgBox = document.getElementById('msg');
+    if (isAr) {
+      msgBox.placeholder = msgBox.getAttribute('data-ar-placeholder') || 'الصق رسالة SMS أو واتساب هنا...';
+    } else {
+      msgBox.placeholder = msgBox.getAttribute('data-en-placeholder') || 'Paste an SMS or WhatsApp message here...';
+    }
+
+    // Update scan button text if it currently shows "Scanning..." keep it or restore
+    const scanBtn = document.getElementById('scanBtn');
+    if (!scanBtn.classList.contains('loading')) {
+      scanBtn.textContent = isAr ? 'افحص الرسالة' : 'Scan message';
+    }
+
+    // Update upload zone text
+    const uploadZoneP = document.querySelector('.upload-zone p');
+    if (uploadZoneP) {
+      uploadZoneP.innerHTML = isAr
+        ? 'أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك'
+        : 'Drop a screenshot here or <span>browse</span> — we\'ll read the text for you';
+    }
+  }
+</script>
 </body>
 </html>
