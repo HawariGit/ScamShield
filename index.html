@@ -645,13 +645,18 @@
     btn.textContent = 'Scanning…'; btn.disabled = true; btn.classList.add('scanning');
     errBox.textContent = ''; hideResult(); showSkeleton();
     try {
-      const body = isUrl ? { url: val } : { text: val };
-      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const ctrl = new AbortController();
+      const warmupTimer = setTimeout(() => { errBox.textContent = 'Backend is waking up — Render free tier can take up to 60s on first use…'; }, 5000);
+      const killTimer = setTimeout(() => ctrl.abort(), 70000);
+      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: val }), signal: ctrl.signal });
+      clearTimeout(warmupTimer); clearTimeout(killTimer); errBox.textContent = '';
       if (!res.ok) throw new Error('Server returned ' + res.status);
       const data = await res.json();
       hideSkeleton(); renderResult(data, val); pushHistory(val, data.result);
-    } catch {
-      hideSkeleton(); errBox.textContent = 'Could not reach the server. Make sure the Render instance is awake.';
+    } catch (e) {
+      hideSkeleton();
+      if (e.name === 'AbortError') { errBox.textContent = 'Request timed out. Render may be overloaded — try again.'; }
+      else { errBox.textContent = 'Could not reach the server. The backend may still be waking up — wait 30s and try again.'; }
     } finally { btn.textContent = 'Verify Content'; btn.disabled = false; btn.classList.remove('scanning'); }
   }
 
