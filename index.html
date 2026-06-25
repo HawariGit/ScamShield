@@ -4,6 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ScamShield — Threat Detection</title>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#080a0f"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="description" content="Detect scam messages and links instantly before you click."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -38,28 +43,17 @@
     }
 
     html { scroll-behavior: smooth; }
-
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
       font-family: 'Inter', system-ui, sans-serif;
-      font-size: 15px;
-      font-weight: 300;
-      line-height: 1.6;
-      letter-spacing: -0.01em;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      font-size: 15px; font-weight: 300; line-height: 1.6; letter-spacing: -0.01em;
+      min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden;
     }
 
-    /* ── ANIMATED MESH BACKGROUND ─────────────────── */
-    .bg-mesh {
-      position: fixed; inset: 0; z-index: 0;
-      overflow: hidden; pointer-events: none;
-    }
+    /* ── BACKGROUND ──────────────────────────────── */
+    .bg-mesh { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
     .bg-mesh::before {
-      content: '';
-      position: absolute; inset: -50%;
+      content: ''; position: absolute; inset: -50%;
       background:
         radial-gradient(ellipse 70% 60% at 20% 20%, rgba(212,170,85,0.09) 0%, transparent 60%),
         radial-gradient(ellipse 60% 50% at 80% 75%, rgba(63,184,122,0.055) 0%, transparent 55%),
@@ -67,634 +61,276 @@
       animation: meshDrift 18s ease-in-out infinite alternate;
     }
     @keyframes meshDrift {
-      0%   { transform: translate(0, 0) scale(1); }
-      33%  { transform: translate(3%, 2%) scale(1.04); }
-      66%  { transform: translate(-2%, 4%) scale(0.98); }
-      100% { transform: translate(4%, -3%) scale(1.06); }
+      0%   { transform: translate(0,0) scale(1); }
+      33%  { transform: translate(3%,2%) scale(1.04); }
+      66%  { transform: translate(-2%,4%) scale(0.98); }
+      100% { transform: translate(4%,-3%) scale(1.06); }
     }
-    /* Grid lines */
     .bg-grid {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
       background-size: 48px 48px;
       mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 80%);
     }
+    body > *:not(.bg-mesh):not(.bg-grid):not(.toast-container) { position: relative; z-index: 1; }
 
-    body > *:not(.bg-mesh):not(.bg-grid) { position: relative; z-index: 1; }
+    /* ── TOASTS ──────────────────────────────────── */
+    .toast-container { position: fixed; top: 72px; right: 1.25rem; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(18,20,28,0.96); border: 1px solid var(--b2);
+      border-radius: 11px; padding: 12px 14px;
+      min-width: 240px; max-width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      pointer-events: all;
+      animation: toastIn .28s cubic-bezier(.22,1,.36,1) both;
+    }
+    .toast.removing { animation: toastOut .22s ease forwards; }
+    @keyframes toastIn  { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
+    @keyframes toastOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(16px); } }
+    .toast-icon { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .toast-info    .toast-icon { background: var(--gold);   box-shadow: 0 0 6px rgba(212,170,85,0.7); }
+    .toast-success .toast-icon { background: var(--safe);   box-shadow: 0 0 6px rgba(63,184,122,0.7); }
+    .toast-error   .toast-icon { background: var(--danger); box-shadow: 0 0 6px rgba(217,69,69,0.7); }
+    .toast-info    { border-color: rgba(212,170,85,0.2); }
+    .toast-success { border-color: rgba(63,184,122,0.2); }
+    .toast-error   { border-color: rgba(217,69,69,0.2); }
+    .toast-body { flex: 1; }
+    .toast-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .toast-msg   { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
 
     /* ── NAV ─────────────────────────────────────── */
-    .nav-shell {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(8,10,15,0.75);
-      backdrop-filter: blur(32px) saturate(1.8);
-      border-bottom: 1px solid var(--b1);
-    }
-    .nav-inner {
-      max-width: 1100px; margin: 0 auto;
-      padding: 0 2rem; height: 62px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .nav-shell { position: sticky; top: 0; z-index: 50; background: rgba(8,10,15,0.75); backdrop-filter: blur(32px) saturate(1.8); border-bottom: 1px solid var(--b1); }
+    .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; height: 62px; display: flex; align-items: center; justify-content: space-between; }
     .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .nav-logo-mark {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: linear-gradient(135deg, rgba(212,170,85,0.18) 0%, rgba(212,170,85,0.06) 100%);
-      border: 1px solid var(--gold-b);
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      box-shadow: 0 0 20px rgba(212,170,85,0.18), inset 0 1px 0 rgba(212,170,85,0.15);
-    }
+    .nav-logo-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, rgba(212,170,85,0.18) 0%, rgba(212,170,85,0.06) 100%); border: 1px solid var(--gold-b); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 0 20px rgba(212,170,85,0.18), inset 0 1px 0 rgba(212,170,85,0.15); }
     .nav-logo-mark svg { width: 16px; height: 16px; }
-    .nav-logo-name {
-      font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.02em;
-    }
+    .nav-logo-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
     .nav-right { display: flex; align-items: center; gap: 9px; }
-
-    .btn-ghost {
-      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
-      padding: 7px 16px; border-radius: 8px; cursor: pointer;
-      border: 1px solid var(--b2); background: transparent; color: var(--muted);
-      transition: all .18s;
-    }
+    .btn-ghost { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 7px 16px; border-radius: 8px; cursor: pointer; border: 1px solid var(--b2); background: transparent; color: var(--muted); transition: all .18s; }
     .btn-ghost:hover { border-color: var(--b3); color: var(--text); background: var(--s2); }
-
-    .btn-gold {
-      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
-      padding: 7px 18px; border-radius: 8px; cursor: pointer;
-      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-      color: #0a0b0f; border: none;
-      transition: all .18s;
-      box-shadow: 0 0 20px rgba(212,170,85,0.3), 0 2px 8px rgba(0,0,0,0.4);
-    }
-    .btn-gold:hover {
-      box-shadow: 0 0 32px rgba(212,170,85,0.45), 0 4px 16px rgba(0,0,0,0.4);
-      transform: translateY(-1px);
-    }
-
-    .btn-white {
-      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
-      padding: 9px 22px; border-radius: 8px; cursor: pointer;
-      background: var(--text); color: #080a0f;
-      border: none; transition: all .18s;
-    }
+    .btn-gold { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 7px 18px; border-radius: 8px; cursor: pointer; background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%); color: #0a0b0f; border: none; transition: all .18s; box-shadow: 0 0 20px rgba(212,170,85,0.3), 0 2px 8px rgba(0,0,0,0.4); }
+    .btn-gold:hover { box-shadow: 0 0 32px rgba(212,170,85,0.45), 0 4px 16px rgba(0,0,0,0.4); transform: translateY(-1px); }
+    .btn-white { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 9px 22px; border-radius: 8px; cursor: pointer; background: var(--text); color: #080a0f; border: none; transition: all .18s; }
     .btn-white:hover { opacity: .88; box-shadow: 0 4px 20px rgba(240,237,231,0.18); transform: translateY(-1px); }
     .btn-white:disabled { opacity: .35; cursor: not-allowed; }
 
     /* ── HERO ────────────────────────────────────── */
-    .hero {
-      text-align: center;
-      padding: 6rem 2rem 2.5rem;
-      max-width: 760px; margin: 0 auto;
-    }
-
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 14px 6px 10px;
-      background: rgba(212,170,85,0.08);
-      border: 1px solid var(--gold-b);
-      border-radius: 50px;
-      font-size: 11px; font-weight: 500;
-      letter-spacing: 0.05em;
-      color: var(--gold);
-      margin-bottom: 1.75rem;
-    }
-    .hero-badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--gold);
-      box-shadow: 0 0 8px rgba(212,170,85,0.9);
-      animation: pulse 2.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity:1; transform:scale(1); box-shadow: 0 0 8px rgba(212,170,85,0.9); }
-      50%      { opacity:.4; transform:scale(0.75); box-shadow: 0 0 4px rgba(212,170,85,0.4); }
-    }
-
-    .hero-h1 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(2.8rem, 6.5vw, 4.4rem);
-      font-weight: 700; line-height: 1.04;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.25rem;
-    }
-    .hero-h1 em {
-      font-style: italic;
-      background: linear-gradient(90deg, var(--gold-light), var(--gold));
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-sub {
-      font-size: 16px; color: var(--muted);
-      line-height: 1.78; max-width: 500px; margin: 0 auto 2.25rem;
-    }
-
-    .hero-stats {
-      display: inline-flex; align-items: stretch;
-      background: var(--s1);
-      border: 1px solid var(--b1);
-      border-radius: 12px; overflow: hidden;
-      backdrop-filter: blur(12px);
-    }
-    .stat-item {
-      padding: 10px 22px;
-      border-right: 1px solid var(--b1);
-      font-size: 12px; color: var(--muted);
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
+    .hero { text-align: center; padding: 6rem 2rem 2.5rem; max-width: 760px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 10px; background: rgba(212,170,85,0.08); border: 1px solid var(--gold-b); border-radius: 50px; font-size: 11px; font-weight: 500; letter-spacing: 0.05em; color: var(--gold); margin-bottom: 1.75rem; }
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px rgba(212,170,85,0.9); animation: pulse 2.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); box-shadow:0 0 8px rgba(212,170,85,0.9); } 50% { opacity:.4; transform:scale(0.75); box-shadow:0 0 4px rgba(212,170,85,0.4); } }
+    .hero-h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.8rem, 6.5vw, 4.4rem); font-weight: 700; line-height: 1.04; letter-spacing: -0.03em; margin-bottom: 1.25rem; }
+    .hero-h1 em { font-style: italic; background: linear-gradient(90deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 16px; color: var(--muted); line-height: 1.78; max-width: 500px; margin: 0 auto 2.25rem; }
+    .hero-stats { display: inline-flex; align-items: stretch; background: var(--s1); border: 1px solid var(--b1); border-radius: 12px; overflow: hidden; backdrop-filter: blur(12px); }
+    .stat-item { padding: 10px 22px; border-right: 1px solid var(--b1); font-size: 12px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .stat-item:last-child { border-right: none; }
     .stat-num { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
 
     /* ── WORKSPACE ───────────────────────────────── */
-    .workspace {
-      max-width: 1100px; margin: 0 auto 6rem;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: 1fr 308px;
-      gap: 1.5rem;
-      align-items: start;
-    }
+    .workspace { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 1fr 308px; gap: 1.5rem; align-items: start; }
     .col-left { display: flex; flex-direction: column; gap: 1.25rem; }
+    .card { background: var(--s1); border: 1px solid var(--b1); border-radius: 16px; padding: 1.75rem; backdrop-filter: blur(20px); transition: border-color .2s, box-shadow .25s; }
+    .card:hover { border-color: var(--b2); box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+    .card-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 7px; }
+    .card-label::before { content: ''; display: block; width: 18px; height: 1px; background: linear-gradient(90deg, var(--gold), transparent); }
 
-    /* Glass Card */
-    .card {
-      background: var(--s1);
-      border: 1px solid var(--b1);
-      border-radius: 16px;
-      padding: 1.75rem;
-      backdrop-filter: blur(20px);
-      transition: border-color .2s, box-shadow .25s;
-    }
-    .card:hover {
-      border-color: var(--b2);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-    }
+    /* ── TABS ────────────────────────────────────── */
+    .tab-row { display: flex; gap: 4px; margin-bottom: 1.1rem; background: rgba(255,255,255,0.04); border: 1px solid var(--b1); border-radius: 9px; padding: 3px; }
+    .tab-btn { flex: 1; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 7px 12px; border-radius: 7px; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .18s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .tab-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .tab-btn.active { background: var(--s2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+    .tab-btn.active svg { color: var(--gold); }
 
-    .card-label {
-      font-size: 10px; font-weight: 600;
-      letter-spacing: .14em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 7px;
-    }
-    .card-label::before {
-      content: '';
-      display: block; width: 18px; height: 1px;
-      background: linear-gradient(90deg, var(--gold), transparent);
-    }
+    /* Input card glow */
+    #inputCard { transition: border-color .22s, box-shadow .28s; }
+    #inputCard:focus-within { border-color: rgba(212,170,85,0.38); box-shadow: 0 0 0 1px rgba(212,170,85,0.18), 0 0 40px rgba(212,170,85,0.09), 0 12px 40px rgba(0,0,0,0.3); }
 
-    /* ── INPUT AREA ──────────────────────────────── */
-    /* Input card glows gold when the textarea is focused */
-    #inputCard {
-      transition: border-color .22s, box-shadow .28s;
-    }
-    #inputCard:focus-within {
-      border-color: rgba(212,170,85,0.38);
-      box-shadow:
-        0 0 0 1px rgba(212,170,85,0.18),
-        0 0 40px rgba(212,170,85,0.09),
-        0 12px 40px rgba(0,0,0,0.3);
-    }
-
-    #msgInput {
-      width: 100%; height: 120px;
-      background: transparent; border: none;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 14.5px; font-weight: 300; line-height: 1.7;
-      resize: none; display: block;
-    }
+    #msgInput { width: 100%; height: 120px; background: transparent; border: none; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 300; line-height: 1.7; resize: none; display: block; }
     #msgInput:focus { outline: none; }
     #msgInput::placeholder { color: var(--dim); font-style: italic; }
 
-    .action-row {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 10px;
-      padding-top: 1.1rem;
-      border-top: 1px solid var(--b1);
-      margin-top: 0.25rem;
-    }
+    .url-input-wrap { display: none; }
+    .url-input-wrap.active { display: block; }
+    .msg-input-wrap.hidden { display: none; }
+
+    #urlInput { width: 100%; background: transparent; border: none; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 300; padding: 12px 0 28px; }
+    #urlInput:focus { outline: none; }
+    #urlInput::placeholder { color: var(--dim); font-style: italic; }
+    .url-hint { font-size: 11px; color: var(--dim); margin-top: -20px; margin-bottom: 8px; }
+
+    .action-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 1.1rem; border-top: 1px solid var(--b1); margin-top: 0.25rem; }
     .presets { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
     .preset-tag { font-size: 11px; color: var(--dim); }
-    .preset-btn {
-      font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500;
-      padding: 5px 12px; border-radius: 6px; cursor: pointer;
-      background: rgba(255,255,255,0.04); border: 1px solid var(--b1); color: var(--muted);
-      transition: all .15s;
-    }
+    .preset-btn { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 6px; cursor: pointer; background: rgba(255,255,255,0.04); border: 1px solid var(--b1); color: var(--muted); transition: all .15s; }
     .preset-btn:hover { border-color: var(--gold-b); color: var(--gold); background: var(--gold-bg); }
 
-    /* ── SCAN BUTTON — the main CTA ─────────────── */
-    .scan-btn {
-      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
-      padding: 10px 26px; border-radius: 9px; cursor: pointer;
-      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
-      color: #080a0f; border: none; white-space: nowrap;
-      transition: all .18s;
-      box-shadow: 0 0 22px rgba(212,170,85,0.28), 0 2px 6px rgba(0,0,0,0.5);
-      position: relative; overflow: hidden;
-    }
-    .scan-btn:hover:not(:disabled) {
-      box-shadow: 0 0 38px rgba(212,170,85,0.5), 0 4px 16px rgba(0,0,0,0.5);
-      transform: translateY(-1px);
-    }
+    .scan-btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 26px; border-radius: 9px; cursor: pointer; background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%); color: #080a0f; border: none; white-space: nowrap; transition: all .18s; box-shadow: 0 0 22px rgba(212,170,85,0.28), 0 2px 6px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+    .scan-btn:hover:not(:disabled) { box-shadow: 0 0 38px rgba(212,170,85,0.5), 0 4px 16px rgba(0,0,0,0.5); transform: translateY(-1px); }
     .scan-btn:active:not(:disabled) { transform: translateY(0); }
     .scan-btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
-
-    .scan-btn.scanning::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
-      background-size: 200% 100%;
-      animation: shimmer .8s linear infinite;
-    }
-    @keyframes shimmer {
-      from { background-position: 200% center; }
-      to   { background-position: -200% center; }
-    }
-
+    .scan-btn.scanning::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%); background-size: 200% 100%; animation: shimmer .8s linear infinite; }
+    @keyframes shimmer { from { background-position: 200% center; } to { background-position: -200% center; } }
     .error-msg { font-size: 12px; color: var(--danger); margin-top: 10px; min-height: 18px; }
 
-    /* ── SKELETON LOADER ─────────────────────────── */
-    .skeleton-card {
-      display: none;
-      background: var(--s1);
-      border: 1px solid var(--b1);
-      border-radius: 16px;
-      padding: 1.75rem;
-      backdrop-filter: blur(20px);
-    }
+    /* ── SKELETON ────────────────────────────────── */
+    .skeleton-card { display: none; background: var(--s1); border: 1px solid var(--b1); border-radius: 16px; padding: 1.75rem; backdrop-filter: blur(20px); }
     .skeleton-card.visible { display: block; animation: fadeUp .3s cubic-bezier(.22,1,.36,1) both; }
-
-    /* Shimmer base */
-    .sk {
-      border-radius: 6px;
-      background: linear-gradient(
-        90deg,
-        rgba(255,255,255,0.045) 0%,
-        rgba(255,255,255,0.09)  40%,
-        rgba(255,255,255,0.045) 80%
-      );
-      background-size: 300% 100%;
-      animation: skShimmer 1.6s ease-in-out infinite;
-    }
-    @keyframes skShimmer {
-      0%   { background-position: 100% center; }
-      100% { background-position: -100% center; }
-    }
-
-    .sk-title   { height: 22px; width: 38%; margin-bottom: 10px; }
+    .sk { border-radius: 6px; background: linear-gradient(90deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.09) 40%, rgba(255,255,255,0.045) 80%); background-size: 300% 100%; animation: skShimmer 1.6s ease-in-out infinite; }
+    @keyframes skShimmer { 0% { background-position: 100% center; } 100% { background-position: -100% center; } }
+    .sk-title { height: 22px; width: 38%; margin-bottom: 10px; }
     .sk-line-lg { height: 12px; width: 92%; margin-bottom: 7px; }
-    .sk-line-md { height: 12px; width: 74%; margin-bottom: 0; }
-    .sk-pill    { height: 24px; width: 80px; border-radius: 7px; }
-    .sk-bar     { height: 6px;  width: 100%; border-radius: 4px; margin: 20px 0 22px; }
-    .sk-tag     { height: 24px; border-radius: 6px; display: inline-block; }
-
-    .sk-verdict-row {
-      display: flex; justify-content: space-between; gap: 14px; margin-bottom: 4px;
-    }
-    .sk-left  { flex: 1; display: flex; flex-direction: column; gap: 0; }
-    .sk-tags  { display: flex; gap: 7px; margin-top: 4px; }
-
-    /* "Server waking up" nudge — fades in after 5s */
-    .sk-notice {
-      display: flex; align-items: center; gap: 8px;
-      margin-top: 1.1rem; padding: 10px 13px;
-      background: rgba(212,170,85,0.07);
-      border: 1px solid rgba(212,170,85,0.18);
-      border-radius: 9px;
-      font-size: 12px; color: var(--muted);
-      opacity: 0; transition: opacity .5s ease;
-    }
+    .sk-line-md { height: 12px; width: 74%; }
+    .sk-pill { height: 24px; width: 80px; border-radius: 7px; }
+    .sk-bar { height: 6px; width: 100%; border-radius: 4px; margin: 20px 0 22px; }
+    .sk-tag { height: 24px; border-radius: 6px; display: inline-block; }
+    .sk-verdict-row { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 4px; }
+    .sk-left { flex: 1; display: flex; flex-direction: column; gap: 0; }
+    .sk-tags { display: flex; gap: 7px; margin-top: 4px; }
+    .sk-notice { display: flex; align-items: center; gap: 8px; margin-top: 1.1rem; padding: 10px 13px; background: rgba(212,170,85,0.07); border: 1px solid rgba(212,170,85,0.18); border-radius: 9px; font-size: 12px; color: var(--muted); opacity: 0; transition: opacity .5s ease; }
     .sk-notice.show { opacity: 1; }
-    .sk-notice-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--gold); flex-shrink: 0;
-      animation: pulse 1.4s ease-in-out infinite;
-    }
+    .sk-notice-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; animation: pulse 1.4s ease-in-out infinite; }
 
     /* ── RESULT CARD ─────────────────────────────── */
     .result-hidden { display: none; }
-    .result-visible {
-      display: block;
-      animation: fadeUp .3s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    .result-visible.verdict-safe {
-      border-color: var(--safe-b);
-      box-shadow: 0 0 40px rgba(63,184,122,0.10), 0 0 0 1px var(--safe-b);
-    }
-    .result-visible.verdict-warn {
-      border-color: var(--warn-b);
-      box-shadow: 0 0 40px rgba(224,138,32,0.10), 0 0 0 1px var(--warn-b);
-    }
-    .result-visible.verdict-danger {
-      border-color: var(--danger-b);
-      box-shadow: 0 0 40px rgba(217,69,69,0.14), 0 0 0 1px var(--danger-b);
-    }
-
-    .verdict-row {
-      display: flex; justify-content: space-between;
-      align-items: flex-start; gap: 14px;
-      margin-bottom: 1.5rem;
-    }
-    .verdict-name {
-      font-size: 24px; font-weight: 700;
-      letter-spacing: -.03em; line-height: 1;
-    }
-    .verdict-reason {
-      font-size: 13px; color: var(--muted);
-      line-height: 1.6; margin-top: 7px; max-width: 400px;
-    }
-    .verdict-pill {
-      font-size: 10px; text-transform: uppercase;
-      letter-spacing: .08em; font-weight: 700;
-      padding: 5px 13px; border-radius: 7px;
-      white-space: nowrap; flex-shrink: 0;
-    }
-
-    .score-header {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: var(--muted); margin-bottom: 9px;
-    }
-    .bar-track {
-      width: 100%; height: 6px;
-      background: rgba(255,255,255,0.06); border-radius: 4px;
-      overflow: visible; margin-bottom: 1.5rem;
-      position: relative;
-    }
-    .bar-fill {
-      height: 100%; width: 0%; border-radius: 4px;
-      transition: width .75s cubic-bezier(.4,0,.2,1);
-      position: relative;
-    }
-    .bar-fill::after {
-      content: '';
-      position: absolute;
-      right: -2px; top: 50%; transform: translateY(-50%);
-      width: 12px; height: 12px; border-radius: 50%;
-      background: inherit; filter: blur(6px); opacity: 0.85;
-    }
-
-    .signals-hd {
-      font-size: 10px; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 10px;
-    }
+    .result-visible { display: block; animation: fadeUp .3s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+    .result-visible.verdict-safe   { border-color: var(--safe-b);   box-shadow: 0 0 40px rgba(63,184,122,0.10),  0 0 0 1px var(--safe-b); }
+    .result-visible.verdict-warn   { border-color: var(--warn-b);   box-shadow: 0 0 40px rgba(224,138,32,0.10),  0 0 0 1px var(--warn-b); }
+    .result-visible.verdict-danger { border-color: var(--danger-b); box-shadow: 0 0 40px rgba(217,69,69,0.14),   0 0 0 1px var(--danger-b); }
+    .verdict-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 1.5rem; }
+    .verdict-left { flex: 1; }
+    .verdict-name { font-size: 24px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+    .verdict-reason { font-size: 13px; color: var(--muted); line-height: 1.6; margin-top: 7px; max-width: 400px; }
+    .verdict-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .verdict-pill { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; padding: 5px 13px; border-radius: 7px; white-space: nowrap; }
+    .result-actions { display: flex; gap: 6px; }
+    .action-btn { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 11px; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--b1); color: var(--muted); transition: all .15s; display: flex; align-items: center; gap: 5px; }
+    .action-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .action-btn:hover { border-color: var(--b2); color: var(--text); background: var(--s2); }
+    .action-btn.copied { color: var(--safe); border-color: var(--safe-b); background: var(--safe-bg); }
+    .score-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 9px; }
+    .bar-track { width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: visible; margin-bottom: 1.5rem; position: relative; }
+    .bar-fill { height: 100%; width: 0%; border-radius: 4px; transition: width .75s cubic-bezier(.4,0,.2,1); position: relative; }
+    .bar-fill::after { content: ''; position: absolute; right: -2px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%; background: inherit; filter: blur(6px); opacity: 0.85; }
+    .signals-hd { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
     .signals-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-    .signal-pill {
-      font-size: 11px; padding: 4px 10px; border-radius: 6px;
-      background: var(--s2); border: 1px solid var(--b1); color: var(--muted);
-    }
-
+    .signal-pill { font-size: 11px; padding: 4px 10px; border-radius: 6px; background: var(--s2); border: 1px solid var(--b1); color: var(--muted); }
     .verdict-safe   .signal-pill { color: var(--safe);   background: var(--safe-bg);   border-color: var(--safe-b); }
     .verdict-warn   .signal-pill { color: var(--warn);   background: var(--warn-bg);   border-color: var(--warn-b); }
     .verdict-danger .signal-pill { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-b); }
-
     .no-signals { font-size: 12px; color: var(--dim); }
 
     /* ── SIDEBAR ─────────────────────────────────── */
     .sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
-
-    .enterprise-card {
-      background: linear-gradient(145deg,
-        rgba(212,170,85,0.10) 0%,
-        rgba(212,170,85,0.03) 60%,
-        rgba(8,10,15,0.6) 100%);
-      border: 1px solid var(--gold-b);
-      border-radius: 16px; padding: 1.65rem;
-      backdrop-filter: blur(20px);
-      position: relative; overflow: hidden;
-    }
-    /* Top edge highlight */
-    .enterprise-card::before {
-      content: '';
-      position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(212,170,85,0.5), transparent);
-    }
+    .enterprise-card { background: linear-gradient(145deg, rgba(212,170,85,0.10) 0%, rgba(212,170,85,0.03) 60%, rgba(8,10,15,0.6) 100%); border: 1px solid var(--gold-b); border-radius: 16px; padding: 1.65rem; backdrop-filter: blur(20px); position: relative; overflow: hidden; }
+    .enterprise-card::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,170,85,0.5), transparent); }
     .enterprise-card h3 { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 10px; }
     .enterprise-card p  { font-size: 12.5px; color: var(--muted); line-height: 1.72; margin-bottom: 15px; }
-
     .history-card { padding: 1.5rem; }
-    .history-card h3 { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 12px; letter-spacing: -.01em; }
+    .history-card h3 { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
     .history-list { display: flex; flex-direction: column; gap: 6px; }
-    .history-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      background: rgba(255,255,255,0.03); border: 1px solid transparent;
-      border-radius: 9px; padding: 8px 11px; cursor: default;
-      transition: all .18s;
-    }
-    .history-item:hover {
-      border-color: var(--b2); background: var(--s2);
-    }
-    .history-text {
-      font-size: 11px; color: var(--muted);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 162px;
-    }
-    .h-badge {
-      font-size: 9px; text-transform: uppercase;
-      letter-spacing: .06em; font-weight: 700;
-      padding: 2px 8px; border-radius: 5px; flex-shrink: 0;
-    }
+    .history-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid transparent; border-radius: 9px; padding: 8px 11px; cursor: default; transition: all .18s; }
+    .history-item:hover { border-color: var(--b2); background: var(--s2); }
+    .history-text { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 162px; }
+    .h-badge { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; }
 
     /* ── AUTH MODAL ──────────────────────────────── */
-    .modal-wrap {
-      display: none; position: fixed; inset: 0; z-index: 200;
-      background: rgba(4,5,8,.90);
-      backdrop-filter: blur(16px);
-      align-items: center; justify-content: center;
-    }
+    .modal-wrap { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(4,5,8,.90); backdrop-filter: blur(16px); align-items: center; justify-content: center; }
     .modal-wrap.open { display: flex; }
-    .modal-box {
-      background: rgba(18,20,28,0.95);
-      border: 1px solid var(--b2);
-      border-radius: 20px; padding: 2.5rem;
-      width: 100%; max-width: 360px;
-      box-shadow: 0 40px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,0.07);
-      animation: modalIn .24s cubic-bezier(.22,1,.36,1) both;
-      position: relative; overflow: hidden;
-    }
-    .modal-box::before {
-      content: '';
-      position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-    }
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(.95) translateY(10px); }
-      to   { opacity: 1; transform: none; }
-    }
-    .modal-box h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px; font-weight: 700;
-      letter-spacing: -.02em; margin-bottom: 1.6rem;
-    }
+    .modal-box { background: rgba(18,20,28,0.95); border: 1px solid var(--b2); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 360px; box-shadow: 0 40px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,0.07); animation: modalIn .24s cubic-bezier(.22,1,.36,1) both; position: relative; overflow: hidden; }
+    .modal-box::before { content: ''; position: absolute; top: 0; left: 15%; right: 15%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); }
+    @keyframes modalIn { from { opacity:0; transform:scale(.95) translateY(10px); } to { opacity:1; transform:none; } }
+    .modal-box h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 1.6rem; }
     .field { margin-bottom: 1.1rem; }
-    .field label {
-      display: block; font-size: 10px; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 6px;
-    }
-    .field input {
-      width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--b1); border-radius: 9px;
-      padding: 11px 14px; color: var(--text);
-      font-family: 'Inter', sans-serif; font-size: 14px;
-      transition: all .15s;
-    }
-    .field input:focus {
-      outline: none; border-color: var(--gold-b);
-      box-shadow: 0 0 0 3px rgba(212,170,85,0.10);
-    }
+    .field label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .field input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--b1); border-radius: 9px; padding: 11px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; transition: all .15s; }
+    .field input:focus { outline: none; border-color: var(--gold-b); box-shadow: 0 0 0 3px rgba(212,170,85,0.10); }
     .field input::placeholder { color: var(--dim); }
-    .modal-footer {
-      font-size: 12px; color: var(--muted);
-      text-align: center; margin-top: 1rem;
-    }
+    .modal-footer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 1rem; }
     .modal-footer span { color: var(--gold); cursor: pointer; text-decoration: underline; }
 
     /* Verdict helpers */
-    .vc-safe    { color: var(--safe); }
-    .vc-warn    { color: var(--warn); }
-    .vc-danger  { color: var(--danger); }
-    .vp-safe    { color: var(--safe);   background: var(--safe-bg);   border: 1px solid var(--safe-b); }
-    .vp-warn    { color: var(--warn);   background: var(--warn-bg);   border: 1px solid var(--warn-b); }
-    .vp-danger  { color: var(--danger); background: var(--danger-bg); border: 1px solid var(--danger-b); }
-    .hp-safe    { color: var(--safe);   background: var(--safe-bg); }
-    .hp-warn    { color: var(--warn);   background: var(--warn-bg); }
-    .hp-danger  { color: var(--danger); background: var(--danger-bg); }
+    .vc-safe { color: var(--safe); } .vc-warn { color: var(--warn); } .vc-danger { color: var(--danger); }
+    .vp-safe { color: var(--safe); background: var(--safe-bg); border: 1px solid var(--safe-b); }
+    .vp-warn { color: var(--warn); background: var(--warn-bg); border: 1px solid var(--warn-b); }
+    .vp-danger { color: var(--danger); background: var(--danger-bg); border: 1px solid var(--danger-b); }
+    .hp-safe { color: var(--safe); background: var(--safe-bg); }
+    .hp-warn { color: var(--warn); background: var(--warn-bg); }
+    .hp-danger { color: var(--danger); background: var(--danger-bg); }
 
-    /* ── UPLOAD ZONE ─────────────────────────────── */
-    .upload-zone {
-      margin-top: 8px; padding: 14px;
-      border: 1px dashed var(--b2); border-radius: 10px;
-      text-align: center; cursor: pointer;
-      transition: all .18s;
-    }
-    .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--gold-b); background: var(--gold-bg);
-    }
+    /* ── UPLOAD ──────────────────────────────────── */
+    .upload-zone { margin-top: 8px; padding: 14px; border: 1px dashed var(--b2); border-radius: 10px; text-align: center; cursor: pointer; transition: all .18s; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold-b); background: var(--gold-bg); }
     .upload-zone svg { width: 16px; height: 16px; color: var(--dim); display: block; margin: 0 auto 5px; }
-    .upload-zone p   { font-size: 11px; color: var(--muted); }
+    .upload-zone p { font-size: 11px; color: var(--muted); }
     .upload-zone p span { color: var(--gold); }
-    .upload-zone input  { display: none; }
-
-    .upload-preview {
-      display: none; align-items: center; gap: 9px;
-      margin-top: 8px; background: var(--s2);
-      border: 1px solid var(--b1); border-radius: 9px; padding: 9px 13px;
-    }
+    .upload-zone input { display: none; }
+    .upload-preview { display: none; align-items: center; gap: 9px; margin-top: 8px; background: var(--s2); border: 1px solid var(--b1); border-radius: 9px; padding: 9px 13px; }
     .upload-preview.show { display: flex; }
-    .upload-preview img  { width: 30px; height: 30px; object-fit: cover; border-radius: 5px; }
+    .upload-preview img { width: 30px; height: 30px; object-fit: cover; border-radius: 5px; }
     .upload-preview-name { flex: 1; font-size: 11px; color: var(--muted); }
     .upload-remove { font-size: 11px; color: var(--danger); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; }
     .ocr-status { font-size: 11px; color: var(--gold); margin-top: 6px; display: none; }
     .ocr-status.show { display: block; }
 
-    /* ── LANG BUTTON & RTL ───────────────────────── */
-    .lang-btn {
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
-      padding: 5px 13px; border-radius: 6px;
-      border: 1px solid var(--b2); background: transparent; color: var(--muted);
-      cursor: pointer; transition: all .15s; flex-shrink: 0;
-    }
+    /* ── LANG & RTL ──────────────────────────────── */
+    .lang-btn { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 6px; border: 1px solid var(--b2); background: transparent; color: var(--muted); cursor: pointer; transition: all .15s; flex-shrink: 0; }
     .lang-btn:hover { color: var(--text); border-color: var(--b3); }
-
     body.rtl { direction: rtl; }
-    body.rtl .nav-inner { flex-direction: row-reverse; }
-    body.rtl .nav-right  { flex-direction: row-reverse; }
-    body.rtl .hero-eyebrow { flex-direction: row-reverse; }
-    body.rtl .action-row { flex-direction: row-reverse; }
-    body.rtl .presets { flex-direction: row-reverse; }
-    body.rtl .signals-wrap { flex-direction: row-reverse; }
+    body.rtl .nav-inner, body.rtl .nav-right { flex-direction: row-reverse; }
+    body.rtl .hero-badge, body.rtl .action-row, body.rtl .presets, body.rtl .signals-wrap { flex-direction: row-reverse; }
     body.rtl #msgInput { direction: rtl; text-align: right; }
     body.rtl .card-label::before { background: linear-gradient(270deg, var(--gold), transparent); }
 
-    /* ── MOBILE SIDEBAR (shown below main col on small screens) ── */
-    .mobile-sidebar {
-      display: none;
-    }
+    /* ── FOOTER ──────────────────────────────────── */
+    .footer { margin-top: 5rem; border-top: 1px solid var(--b1); background: rgba(8,10,15,0.6); backdrop-filter: blur(20px); }
+    .footer-inner { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+    .footer-brand { display: flex; flex-direction: column; gap: 6px; }
+    .footer-logo { display: flex; align-items: center; gap: 8px; }
+    .footer-logo-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--gold-bg); border: 1px solid var(--gold-b); display: flex; align-items: center; justify-content: center; }
+    .footer-logo-mark svg { width: 12px; height: 12px; }
+    .footer-logo-name { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+    .footer-tagline { font-size: 12px; color: var(--muted); padding-left: 34px; }
+    .footer-links { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .footer-link { font-size: 12px; color: var(--muted); text-decoration: none; transition: color .15s; }
+    .footer-link:hover { color: var(--text); }
+    .footer-bottom { border-top: 1px solid var(--b1); padding: 1rem 2rem; max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .footer-copy { font-size: 11px; color: var(--dim); }
+    .footer-pwa-btn { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 6px; cursor: pointer; background: var(--gold-bg); border: 1px solid var(--gold-b); color: var(--gold); transition: all .15s; display: none; align-items: center; gap: 6px; }
+    .footer-pwa-btn.show { display: flex; }
+    .footer-pwa-btn:hover { background: rgba(212,170,85,0.16); }
+    .footer-pwa-btn svg { width: 12px; height: 12px; }
 
-    /* ── RESPONSIVE ──────────────────────────────── */
+    /* ── MOBILE ──────────────────────────────────── */
+    .mobile-sidebar { display: none; }
+    .mobile-history-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; gap: 8px; padding-bottom: 4px; scrollbar-width: none; }
+    .mobile-history-scroll::-webkit-scrollbar { display: none; }
+    .mobile-history-chip { display: flex; align-items: center; gap: 7px; flex-shrink: 0; background: rgba(255,255,255,0.04); border: 1px solid var(--b1); border-radius: 8px; padding: 7px 11px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
     @media (max-width: 780px) {
-      .workspace {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-      }
-      /* Hide the desktop sidebar column */
+      .workspace { grid-template-columns: 1fr; gap: 1.25rem; }
       .sidebar { display: none; }
-
-      /* Show the mobile sidebar strip */
-      .mobile-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        margin-top: 0.25rem;
-      }
-
-      /* Horizontal scrolling chips for history on mobile */
-      .mobile-history-scroll {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        display: flex;
-        gap: 8px;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-      }
-      .mobile-history-scroll::-webkit-scrollbar { display: none; }
-      .mobile-history-chip {
-        display: flex; align-items: center; gap: 7px;
-        flex-shrink: 0;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid var(--b1);
-        border-radius: 8px;
-        padding: 7px 11px;
-        font-size: 11px; color: var(--muted);
-        white-space: nowrap;
-      }
-
-      /* Bigger touch targets for preset buttons */
-      .preset-btn {
-        padding: 7px 14px;
-        font-size: 12px;
-      }
-
-      /* Stack action row on very narrow */
-      .action-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-      }
-      .scan-btn {
-        width: 100%;
-        padding: 13px;
-        font-size: 14px;
-        border-radius: 10px;
-      }
+      .mobile-sidebar { display: flex; flex-direction: column; gap: 1rem; margin-top: 0.25rem; }
+      .preset-btn { padding: 7px 14px; font-size: 12px; }
+      .action-row { flex-direction: column; align-items: stretch; gap: 12px; }
+      .scan-btn { width: 100%; padding: 13px; font-size: 14px; border-radius: 10px; }
       .presets { justify-content: center; }
-
-      /* Bigger textarea on mobile */
       #msgInput { height: 140px; font-size: 15px; }
     }
-
     @media (max-width: 500px) {
-      .hero {
-        padding: 3rem 1.25rem 1.75rem;
-      }
+      .hero { padding: 3rem 1.25rem 1.75rem; }
       .hero-h1 { font-size: 2.5rem; }
       .hero-sub { font-size: 14.5px; }
       .hero-stats { display: none; }
-
-      .workspace { padding: 0 1rem; margin-bottom: 4rem; }
-      .nav-inner  { padding: 0 1rem; }
-
+      .workspace { padding: 0 1rem; }
+      .nav-inner { padding: 0 1rem; }
       .card { padding: 1.35rem; border-radius: 14px; }
-
-      /* Nav: hide ghost sign-in on very small, keep Get Started */
       .btn-ghost { display: none; }
-      .lang-btn  { padding: 5px 10px; font-size: 11px; }
+      .lang-btn { padding: 5px 10px; font-size: 11px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-links { gap: 1rem; }
     }
   </style>
 </head>
@@ -702,516 +338,472 @@
 
 <div class="bg-mesh"></div>
 <div class="bg-grid"></div>
+<div class="toast-container" id="toastContainer"></div>
 
-<!-- ── NAV ───────────────────────────────────────── -->
+<!-- NAV -->
 <div class="nav-shell">
   <div class="nav-inner">
     <a class="nav-logo" href="#">
       <div class="nav-logo-mark">
-        <svg viewBox="0 0 20 20" fill="none">
-          <path d="M10 2L3 5.5V10c0 3.9 3.1 7.5 7 8.5 3.9-1 7-4.6 7-8.5V5.5L10 2Z"
-                stroke="#d4aa55" stroke-width="1.5" fill="rgba(212,170,85,0.08)"/>
-          <path d="M7 10l2.5 2.5 4-4"
-                stroke="#d4aa55" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 5.5V10c0 3.9 3.1 7.5 7 8.5 3.9-1 7-4.6 7-8.5V5.5L10 2Z" stroke="#d4aa55" stroke-width="1.5" fill="rgba(212,170,85,0.08)"/><path d="M7 10l2.5 2.5 4-4" stroke="#d4aa55" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <span class="nav-logo-name">ScamShield</span>
     </a>
     <div class="nav-right" id="navRight">
       <button class="lang-btn" id="langToggle" onclick="toggleLanguage()">العربية</button>
       <button class="btn-ghost" onclick="openAuth(false)" data-en="Sign In" data-ar="تسجيل الدخول">Sign In</button>
-      <button class="btn-gold"  onclick="openAuth(true)"  data-en="Get Started" data-ar="ابدأ الآن">Get Started</button>
+      <button class="btn-gold" onclick="openAuth(true)" data-en="Get Started" data-ar="ابدأ الآن">Get Started</button>
     </div>
   </div>
 </div>
 
-<!-- ── HERO ──────────────────────────────────────── -->
+<!-- HERO -->
 <div class="hero">
   <div class="hero-badge">
     <span class="hero-badge-dot"></span>
     <span data-en="Verified Protection Framework" data-ar="إطار الحماية المعتمد">Verified Protection Framework</span>
   </div>
   <h1 class="hero-h1" data-en="Don't get scammed.<br>Get <em>protected.</em>" data-ar="لا تقع ضحية النصب.<br>احمِ <em>نفسك.</em>">Don't get scammed.<br>Get <em>protected.</em></h1>
-  <p class="hero-sub" data-en="Paste any suspicious SMS or WhatsApp message below. ScamShield analyses active threat signals instantly — before you click a single link." data-ar="الصق أي رسالة مشبوهة من SMS أو واتساب. سيحللها ScamShield فوراً — قبل أن تضغط على أي رابط.">
-    Paste any suspicious SMS or WhatsApp message below. ScamShield analyses active
-    threat signals instantly — before you click a single link.
+  <p class="hero-sub" data-en="Paste any suspicious SMS, WhatsApp message, or link. ScamShield analyses threat signals instantly — before you click." data-ar="الصق أي رسالة مشبوهة أو رابط. سيحللها ScamShield فوراً — قبل أن تضغط.">
+    Paste any suspicious SMS, WhatsApp message, or link. ScamShield analyses threat signals instantly — before you click.
   </p>
   <div class="hero-stats">
-    <div class="stat-item">
-      <span class="stat-num">99.2%</span>
-      <span>accuracy</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-num">Arabic</span>
-      <span>supported</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-num">Free</span>
-      <span>to use</span>
-    </div>
+    <div class="stat-item"><span class="stat-num">99.2%</span><span>accuracy</span></div>
+    <div class="stat-item"><span class="stat-num">Arabic</span><span>supported</span></div>
+    <div class="stat-item"><span class="stat-num">Free</span><span>to use</span></div>
   </div>
 </div>
 
-<!-- ── WORKSPACE ─────────────────────────────────── -->
+<!-- WORKSPACE -->
 <div class="workspace">
   <div class="col-left">
 
-    <!-- Input card -->
     <div class="card" id="inputCard">
-      <div class="card-label" data-en="Live Message Analysis Engine" data-ar="محرك تحليل الرسائل المباشر">Live Message Analysis Engine</div>
-      <textarea id="msgInput"
-        placeholder="Paste an SMS or WhatsApp message here…"
-        data-en-placeholder="Paste an SMS or WhatsApp message here…"
-        data-ar-placeholder="الصق رسالة SMS أو واتساب هنا…"
-        dir="auto"></textarea>
+      <div class="card-label" data-en="Live Analysis Engine" data-ar="محرك التحليل المباشر">Live Analysis Engine</div>
 
-      <div class="upload-zone" id="uploadZone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <path d="M21 15l-5-5L5 21"/>
-        </svg>
-        <p data-en="Drop a screenshot here or <span>browse</span> — we'll read the text for you"
-           data-ar="أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك">
-          Drop a screenshot here or <span>browse</span> — we'll read the text for you
-        </p>
-        <input type="file" id="fileInput" accept="image/*">
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabMsg" onclick="switchTab('msg')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12a1 1 0 011 1v7a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M1 4l7 5 7-5"/></svg>
+          <span data-en="Message" data-ar="رسالة">Message</span>
+        </button>
+        <button class="tab-btn" id="tabUrl" onclick="switchTab('url')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5a3.5 3.5 0 005 0l2-2a3.5 3.5 0 00-5-5L7.5 3.5"/><path d="M9.5 6.5a3.5 3.5 0 00-5 0l-2 2a3.5 3.5 0 005 5l1-1"/></svg>
+          <span data-en="URL / Link" data-ar="رابط">URL / Link</span>
+        </button>
       </div>
-      <div class="upload-preview" id="uploadPreview">
-        <img id="previewImg" src="" alt="">
-        <span class="upload-preview-name" id="previewName"></span>
-        <button class="upload-remove" id="removeUpload">Remove</button>
+
+      <div class="msg-input-wrap" id="msgWrap">
+        <textarea id="msgInput" placeholder="Paste an SMS or WhatsApp message here…" data-en-placeholder="Paste an SMS or WhatsApp message here…" data-ar-placeholder="الصق رسالة SMS أو واتساب هنا…" dir="auto"></textarea>
+        <div class="upload-zone" id="uploadZone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <p data-en="Drop a screenshot here or <span>browse</span> — we'll read the text for you" data-ar="أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك">Drop a screenshot here or <span>browse</span> — we'll read the text for you</p>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+        <div class="upload-preview" id="uploadPreview">
+          <img id="previewImg" src="" alt="">
+          <span class="upload-preview-name" id="previewName"></span>
+          <button class="upload-remove" id="removeUpload">Remove</button>
+        </div>
+        <div class="ocr-status" id="ocrStatus"></div>
       </div>
-      <div class="ocr-status" id="ocrStatus"></div>
+
+      <div class="url-input-wrap" id="urlWrap">
+        <input type="url" id="urlInput" placeholder="https://suspicious-link.com/verify…" data-en-placeholder="https://suspicious-link.com/verify…" data-ar-placeholder="https://رابط-مشبوه.com/verify…"/>
+        <p class="url-hint" data-en="Paste any link — shortened URLs like bit.ly work too" data-ar="الصق أي رابط — الروابط المختصرة مثل bit.ly تعمل أيضاً">Paste any link — shortened URLs like bit.ly work too</p>
+      </div>
 
       <div class="action-row">
         <div class="presets">
           <span class="preset-tag" data-en="Try:" data-ar="جرّب:">Try:</span>
-          <button class="preset-btn" onclick="loadSample('scam')"       data-en="Scam"       data-ar="احتيال">Scam</button>
-          <button class="preset-btn" onclick="loadSample('suspicious')" data-en="Suspicious" data-ar="مشبوه">Suspicious</button>
-          <button class="preset-btn" onclick="loadSample('safe')"       data-en="Safe"       data-ar="آمن">Safe</button>
+          <button class="preset-btn msg-only" onclick="loadSample('scam')" data-en="Scam" data-ar="احتيال">Scam</button>
+          <button class="preset-btn msg-only" onclick="loadSample('suspicious')" data-en="Suspicious" data-ar="مشبوه">Suspicious</button>
+          <button class="preset-btn msg-only" onclick="loadSample('safe')" data-en="Safe" data-ar="آمن">Safe</button>
+          <button class="preset-btn url-only" style="display:none" onclick="loadSample('url')" data-en="Scam URL" data-ar="رابط احتيال">Scam URL</button>
         </div>
         <button class="scan-btn" id="scanBtn" onclick="executeScan()" data-en="Verify Content" data-ar="افحص الرسالة">Verify Content</button>
       </div>
       <div class="error-msg" id="errorMsg"></div>
     </div>
 
-    <!-- Skeleton loader (shown while API is scanning) -->
     <div class="skeleton-card" id="skeletonCard">
       <div class="sk-verdict-row">
-        <div class="sk-left">
-          <div class="sk sk-title"></div>
-          <div class="sk sk-line-lg" style="margin-top:8px;"></div>
-          <div class="sk sk-line-md" style="margin-top:6px;"></div>
-        </div>
+        <div class="sk-left"><div class="sk sk-title"></div><div class="sk sk-line-lg" style="margin-top:8px;"></div><div class="sk sk-line-md" style="margin-top:6px;"></div></div>
         <div class="sk sk-pill"></div>
       </div>
       <div class="sk sk-bar"></div>
-      <div class="sk-tags">
-        <div class="sk sk-tag" style="width:72px;"></div>
-        <div class="sk sk-tag" style="width:90px;"></div>
-        <div class="sk sk-tag" style="width:58px;"></div>
-      </div>
-      <div class="sk-notice" id="skNotice">
-        <span class="sk-notice-dot"></span>
-        <span>Server is waking up — Render cold starts can take 15–30s. Hang tight…</span>
-      </div>
+      <div class="sk-tags"><div class="sk sk-tag" style="width:72px;"></div><div class="sk sk-tag" style="width:90px;"></div><div class="sk sk-tag" style="width:58px;"></div></div>
+      <div class="sk-notice" id="skNotice"><span class="sk-notice-dot"></span><span>Server is waking up — Render cold starts can take 15–30s. Hang tight…</span></div>
     </div>
 
-    <!-- Result card -->
     <div class="card result-hidden" id="resultCard">
       <div class="verdict-row">
-        <div>
+        <div class="verdict-left">
           <div class="verdict-name" id="verdictName"></div>
           <div class="verdict-reason" id="verdictReason"></div>
         </div>
-        <div class="verdict-pill" id="verdictPill"></div>
+        <div class="verdict-right">
+          <div class="verdict-pill" id="verdictPill"></div>
+          <div class="result-actions">
+            <button class="action-btn" id="copyBtn" onclick="copyResult()">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              <span>Copy</span>
+            </button>
+            <button class="action-btn" onclick="shareResult()">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="3" r="1.5"/><circle cx="4" cy="8" r="1.5"/><circle cx="12" cy="13" r="1.5"/><path d="M5.5 7.1l5-2.7M5.5 9l5 2.7"/></svg>
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="score-header">
-        <span>Risk Threat Index</span>
-        <span id="scoreLabel">0 / 10</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" id="barFill"></div>
-      </div>
+      <div class="score-header"><span>Risk Threat Index</span><span id="scoreLabel">0 / 10</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
       <div class="signals-hd">Identified Vector Triggers</div>
       <div class="signals-wrap" id="signalsWrap"></div>
     </div>
 
-  </div>
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-
-    <div class="enterprise-card">
-      <h3 data-en="Enterprise Shield" data-ar="درع المؤسسات">Enterprise Shield</h3>
-      <p data-en="Unlock automated WhatsApp webhook relays, sandboxed real-time link checks, and comprehensive scanning histories across your team." data-ar="افتح قنوات واتساب الآلية وفحص الروابط الفوري وسجلات الفحص الشاملة لفريقك.">Unlock automated WhatsApp webhook relays, sandboxed real-time link checks, and comprehensive scanning histories across your team.</p>
-      <button class="btn-white" style="width:100%;padding:9px 0;font-size:12px;"
-              onclick="alert('Stripe gateway placeholder')"
-              data-en="Upgrade Tier" data-ar="ترقية الخطة">Upgrade Tier</button>
-    </div>
-
-    <div class="card history-card">
-      <h3 data-en="Verification Log" data-ar="سجل الفحص">Verification Log</h3>
-      <div class="history-list" id="historyList">
-        <div class="history-item">
-          <span class="history-text">Urgent: Account locked instantly...</span>
-          <span class="h-badge hp-danger">Scam</span>
-        </div>
-        <div class="history-item">
-          <span class="history-text">Are we meeting up for lunch today?</span>
-          <span class="h-badge hp-safe">Safe</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ── MOBILE SIDEBAR (visible only on small screens) ─ -->
-<div class="workspace" style="margin-top:0;padding-top:0;">
-  <div class="col-left">
     <div class="mobile-sidebar">
-
-      <!-- Enterprise card condensed -->
       <div class="enterprise-card" style="padding:1.3rem;">
         <h3 data-en="Enterprise Shield" data-ar="درع المؤسسات">Enterprise Shield</h3>
         <p style="margin-bottom:12px;" data-en="Webhook relays, real-time link checks, and full scan history for your team." data-ar="قنوات واتساب الآلية وفحص الروابط والسجلات لفريقك.">Webhook relays, real-time link checks, and full scan history for your team.</p>
-        <button class="btn-white" style="width:100%;padding:9px 0;font-size:12px;" onclick="alert('Stripe gateway placeholder')" data-en="Upgrade Tier" data-ar="ترقية الخطة">Upgrade Tier</button>
+        <button class="btn-white" style="width:100%;padding:9px 0;font-size:12px;" onclick="showToast('Coming soon','Stripe integration is on the way!','info')">Upgrade Tier</button>
       </div>
-
-      <!-- History as horizontal scroll chips -->
       <div>
-        <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;" data-en="Verification Log" data-ar="سجل الفحص">Verification Log</div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Verification Log</div>
         <div class="mobile-history-scroll" id="mobileHistoryScroll">
-          <div class="mobile-history-chip">
-            <span>Urgent: Account locked…</span>
-            <span class="h-badge hp-danger">Scam</span>
-          </div>
-          <div class="mobile-history-chip">
-            <span>Are we meeting for lunch?</span>
-            <span class="h-badge hp-safe">Safe</span>
-          </div>
+          <div class="mobile-history-chip"><span>Urgent: Account locked…</span><span class="h-badge hp-danger">Scam</span></div>
+          <div class="mobile-history-chip"><span>Are we meeting for lunch?</span><span class="h-badge hp-safe">Safe</span></div>
         </div>
       </div>
+    </div>
+  </div>
 
+  <div class="sidebar">
+    <div class="enterprise-card">
+      <h3 data-en="Enterprise Shield" data-ar="درع المؤسسات">Enterprise Shield</h3>
+      <p data-en="Unlock automated WhatsApp webhook relays, sandboxed real-time link checks, and comprehensive scanning histories across your team." data-ar="افتح قنوات واتساب الآلية وفحص الروابط الفوري وسجلات الفحص الشاملة لفريقك.">Unlock automated WhatsApp webhook relays, sandboxed real-time link checks, and comprehensive scanning histories across your team.</p>
+      <button class="btn-white" style="width:100%;padding:9px 0;font-size:12px;" onclick="showToast('Coming soon','Stripe integration is on the way!','info')" data-en="Upgrade Tier" data-ar="ترقية الخطة">Upgrade Tier</button>
+    </div>
+    <div class="card history-card">
+      <h3 data-en="Verification Log" data-ar="سجل الفحص">Verification Log</h3>
+      <div class="history-list" id="historyList">
+        <div class="history-item"><span class="history-text">Urgent: Account locked instantly...</span><span class="h-badge hp-danger">Scam</span></div>
+        <div class="history-item"><span class="history-text">Are we meeting up for lunch today?</span><span class="h-badge hp-safe">Safe</span></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ── AUTH MODAL ─────────────────────────────────── -->
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <div class="footer-logo-mark"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2L3 5.5V10c0 3.9 3.1 7.5 7 8.5 3.9-1 7-4.6 7-8.5V5.5L10 2Z" stroke="#d4aa55" stroke-width="1.5" fill="rgba(212,170,85,0.08)"/><path d="M7 10l2.5 2.5 4-4" stroke="#d4aa55" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="footer-logo-name">ScamShield</span>
+      </div>
+      <span class="footer-tagline" data-en="Built for the Gulf. Free for everyone." data-ar="صُنع للخليج. مجاني للجميع.">Built for the Gulf. Free for everyone.</span>
+    </div>
+    <div class="footer-links">
+      <a class="footer-link" href="#" data-en="Privacy" data-ar="الخصوصية">Privacy</a>
+      <a class="footer-link" href="#" data-en="About" data-ar="عن المنصة">About</a>
+      <a class="footer-link" href="#" data-en="Report a scam" data-ar="بلّغ عن احتيال">Report a scam</a>
+      <a class="footer-link" href="mailto:hawariiiii2006@gmail.com" data-en="Contact" data-ar="تواصل معنا">Contact</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 ScamShield. Protecting the Gulf, one message at a time.</span>
+    <button class="footer-pwa-btn" id="installBtn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v9M5 7l3 3 3-3"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/></svg>
+      Install App
+    </button>
+  </div>
+</footer>
+
+<!-- AUTH MODAL -->
 <div class="modal-wrap" id="authModal" onclick="backdropClose(event)">
   <div class="modal-box">
     <h2 id="authTitle" data-en="Welcome back" data-ar="أهلاً بعودتك">Welcome back</h2>
-    <div class="field">
-      <label data-en="Email Address" data-ar="البريد الإلكتروني">Email Address</label>
-      <input type="email" id="authEmail" placeholder="name@domain.com"/>
-    </div>
-    <div class="field">
-      <label data-en="Password" data-ar="كلمة المرور">Password</label>
-      <input type="password" id="authPw" placeholder="••••••••"/>
-    </div>
-    <button class="btn-gold" id="authSubmitBtn"
-            data-en="Continue" data-ar="متابعة"
-            style="width:100%;padding:12px 0;font-size:14px;border-radius:9px;margin-top:4px;">
-      Continue
-    </button>
-    <div class="modal-footer" id="authToggle">
-      Don't have an account? <span onclick="flipMode()">Sign up</span>
-    </div>
+    <div class="field"><label data-en="Email Address" data-ar="البريد الإلكتروني">Email Address</label><input type="email" id="authEmail" placeholder="name@domain.com"/></div>
+    <div class="field"><label data-en="Password" data-ar="كلمة المرور">Password</label><input type="password" id="authPw" placeholder="••••••••"/></div>
+    <button class="btn-gold" id="authSubmitBtn" data-en="Continue" data-ar="متابعة" style="width:100%;padding:12px 0;font-size:14px;border-radius:9px;margin-top:4px;">Continue</button>
+    <div class="modal-footer" id="authToggle">Don't have an account? <span onclick="flipMode()">Sign up</span></div>
   </div>
 </div>
 
+<canvas id="shareCanvas" style="display:none"></canvas>
+
 <script>
-  const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
   const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-  const API_URL           = 'https://scamshield-yq85.onrender.com/scan';
+  const API_URL = 'https://scamshield-yq85.onrender.com/scan';
 
   let sb = null;
   if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email) renderUserNav(session.user.email);
-    });
+    sb.auth.getSession().then(({ data: { session } }) => { if (session?.user?.email) renderUserNav(session.user.email); });
   }
 
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; document.getElementById('installBtn').classList.add('show'); });
+  document.getElementById('installBtn').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('Installed!', 'ScamShield added to your home screen.', 'success');
+    deferredPrompt = null; document.getElementById('installBtn').classList.remove('show');
+  });
+
+  /* ── Toasts ───────────────────────────────────── */
+  function showToast(title, msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.innerHTML = '<div class="toast-icon"></div><div class="toast-body"><div class="toast-title">' + title + '</div><div class="toast-msg">' + msg + '</div></div>';
+    c.appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, 4000);
+  }
+
+  /* ── Tabs ─────────────────────────────────────── */
+  let activeTab = 'msg';
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabMsg').classList.toggle('active', tab === 'msg');
+    document.getElementById('tabUrl').classList.toggle('active', tab === 'url');
+    document.getElementById('msgWrap').classList.toggle('hidden', tab === 'url');
+    document.getElementById('urlWrap').classList.toggle('active', tab === 'url');
+    document.querySelectorAll('.msg-only').forEach(el => el.style.display = tab === 'url' ? 'none' : '');
+    document.querySelectorAll('.url-only').forEach(el => el.style.display = tab === 'url' ? '' : 'none');
+    hideResult(); document.getElementById('errorMsg').textContent = '';
+  }
+
+  /* ── Samples ──────────────────────────────────── */
   const SAMPLES = {
-    scam:       'URGENT: Your bank account has been suspended. Click the link immediately to verify your password and login: http://secure-bank-verify.xyz',
+    scam: 'URGENT: Your bank account has been suspended. Click the link immediately to verify: http://secure-bank-verify.xyz',
     suspicious: 'Your package delivery requires a minor address update: http://bit.ly/track-pack',
-    safe:       'Hi! Just confirming our meeting tomorrow at 3pm. Let me know if you need to reschedule.'
+    safe: 'Hi! Just confirming our meeting tomorrow at 3pm. Let me know if you need to reschedule.',
+    url: 'http://secure-paypal-verify.xyz/login?redirect=1'
   };
-
   function loadSample(key) {
-    document.getElementById('msgInput').value = SAMPLES[key];
-    hideResult();
-    document.getElementById('errorMsg').textContent = '';
-    clearUpload();
+    if (key === 'url') document.getElementById('urlInput').value = SAMPLES[key];
+    else document.getElementById('msgInput').value = SAMPLES[key];
+    hideResult(); document.getElementById('errorMsg').textContent = '';
+    if (key !== 'url') clearUpload();
   }
 
-  const uploadZone    = document.getElementById('uploadZone');
-  const fileInput     = document.getElementById('fileInput');
+  /* ── Upload/OCR ───────────────────────────────── */
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
   const uploadPreview = document.getElementById('uploadPreview');
-  const previewImg    = document.getElementById('previewImg');
-  const previewName   = document.getElementById('previewName');
-  const ocrStatus     = document.getElementById('ocrStatus');
-
+  const previewImg = document.getElementById('previewImg');
+  const previewName = document.getElementById('previewName');
+  const ocrStatus = document.getElementById('ocrStatus');
   uploadZone.addEventListener('click', () => fileInput.click());
   uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
   uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault(); uploadZone.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
   fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
   document.getElementById('removeUpload').addEventListener('click', clearUpload);
-
-  function clearUpload() {
-    fileInput.value = '';
-    uploadPreview.classList.remove('show');
-    ocrStatus.classList.remove('show');
-    ocrStatus.textContent = '';
-  }
-
+  function clearUpload() { fileInput.value = ''; uploadPreview.classList.remove('show'); ocrStatus.classList.remove('show'); ocrStatus.textContent = ''; }
   async function handleFile(file) {
-    if (!file.type.startsWith('image/')) {
-      document.getElementById('errorMsg').textContent = 'Please upload an image file.';
-      return;
-    }
-    previewImg.src = URL.createObjectURL(file);
-    previewName.textContent = file.name;
-    uploadPreview.classList.add('show');
-    document.getElementById('errorMsg').textContent = '';
-    ocrStatus.textContent = 'Reading text from image…';
-    ocrStatus.classList.add('show');
+    if (!file.type.startsWith('image/')) { document.getElementById('errorMsg').textContent = 'Please upload an image file.'; return; }
+    previewImg.src = URL.createObjectURL(file); previewName.textContent = file.name;
+    uploadPreview.classList.add('show'); document.getElementById('errorMsg').textContent = '';
+    ocrStatus.textContent = 'Reading text from image…'; ocrStatus.classList.add('show');
     try {
       const result = await Tesseract.recognize(file, 'eng+ara', { logger: () => {} });
       const text = result.data.text.trim();
-      if (text) {
-        document.getElementById('msgInput').value = text;
-        ocrStatus.textContent = 'Text extracted — review it, then scan.';
-      } else {
-        ocrStatus.textContent = 'No text found — try a clearer screenshot or paste manually.';
-      }
-    } catch {
-      ocrStatus.textContent = 'Could not read image. Try pasting the text manually.';
-    }
+      if (text) { document.getElementById('msgInput').value = text; ocrStatus.textContent = 'Text extracted — review it, then scan.'; }
+      else ocrStatus.textContent = 'No text found — try a clearer screenshot or paste manually.';
+    } catch { ocrStatus.textContent = 'Could not read image. Try pasting the text manually.'; }
   }
 
+  /* ── Verdict helpers ──────────────────────────── */
   function vStyle(v) {
-    if (/scam/i.test(v))       return { text:'vc-danger', pill:'vp-danger', bar:'var(--danger)', badge:'hp-danger', card:'verdict-danger' };
-    if (/suspicious/i.test(v)) return { text:'vc-warn',   pill:'vp-warn',   bar:'var(--warn)',   badge:'hp-warn',   card:'verdict-warn'   };
-    return                           { text:'vc-safe',   pill:'vp-safe',   bar:'var(--safe)',   badge:'hp-safe',   card:'verdict-safe'   };
+    if (/scam/i.test(v))       return { text:'vc-danger', pill:'vp-danger', bar:'var(--danger)', badge:'hp-danger', card:'verdict-danger', color:'#d94545' };
+    if (/suspicious/i.test(v)) return { text:'vc-warn',   pill:'vp-warn',   bar:'var(--warn)',   badge:'hp-warn',   card:'verdict-warn',   color:'#e08a20' };
+    return                           { text:'vc-safe',   pill:'vp-safe',   bar:'var(--safe)',   badge:'hp-safe',   card:'verdict-safe',   color:'#3fb87a' };
   }
 
-  function showResult(verdictClass) {
-    const el = document.getElementById('resultCard');
-    el.className = 'card result-visible ' + (verdictClass || '');
-  }
-  function hideResult() {
-    document.getElementById('resultCard').className = 'card result-hidden';
-  }
+  let lastResult = null;
+  function showResult(vc) { const el = document.getElementById('resultCard'); el.className = 'card result-visible ' + (vc || ''); }
+  function hideResult() { document.getElementById('resultCard').className = 'card result-hidden'; lastResult = null; }
 
+  /* ── Skeleton ─────────────────────────────────── */
   let wakeUpTimer = null;
+  function showSkeleton() { document.getElementById('skeletonCard').classList.add('visible'); document.getElementById('skNotice').classList.remove('show'); wakeUpTimer = setTimeout(() => document.getElementById('skNotice').classList.add('show'), 5000); }
+  function hideSkeleton() { document.getElementById('skeletonCard').classList.remove('visible'); document.getElementById('skNotice').classList.remove('show'); if (wakeUpTimer) { clearTimeout(wakeUpTimer); wakeUpTimer = null; } }
 
-  function showSkeleton() {
-    document.getElementById('skeletonCard').classList.add('visible');
-    document.getElementById('skNotice').classList.remove('show');
-    // Show the "waking up" nudge after 5 seconds
-    wakeUpTimer = setTimeout(() => {
-      document.getElementById('skNotice').classList.add('show');
-    }, 5000);
-  }
-
-  function hideSkeleton() {
-    document.getElementById('skeletonCard').classList.remove('visible');
-    document.getElementById('skNotice').classList.remove('show');
-    if (wakeUpTimer) { clearTimeout(wakeUpTimer); wakeUpTimer = null; }
-  }
-
+  /* ── Scan ─────────────────────────────────────── */
   async function executeScan() {
-    const val = document.getElementById('msgInput').value.trim();
+    const isUrl = activeTab === 'url';
+    const val = isUrl ? document.getElementById('urlInput').value.trim() : document.getElementById('msgInput').value.trim();
     if (!val) return;
-    const btn    = document.getElementById('scanBtn');
+    const btn = document.getElementById('scanBtn');
     const errBox = document.getElementById('errorMsg');
-    btn.textContent = 'Scanning…';
-    btn.disabled = true;
-    btn.classList.add('scanning');
-    errBox.textContent = '';
-    hideResult();
-    showSkeleton();
+    btn.textContent = 'Scanning…'; btn.disabled = true; btn.classList.add('scanning');
+    errBox.textContent = ''; hideResult(); showSkeleton();
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: val })
-      });
+      const body = isUrl ? { url: val } : { text: val };
+      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (!res.ok) throw new Error('Server returned ' + res.status);
       const data = await res.json();
-      hideSkeleton();
-      renderResult(data);
-      pushHistory(val, data.result);
+      hideSkeleton(); renderResult(data, val); pushHistory(val, data.result);
     } catch {
-      hideSkeleton();
-      errBox.textContent = 'Could not reach the server. Make sure the Render instance is awake.';
-    } finally {
-      btn.textContent = 'Verify Content';
-      btn.disabled = false;
-      btn.classList.remove('scanning');
-    }
+      hideSkeleton(); errBox.textContent = 'Could not reach the server. Make sure the Render instance is awake.';
+    } finally { btn.textContent = 'Verify Content'; btn.disabled = false; btn.classList.remove('scanning'); }
   }
 
-  function renderResult(data) {
-    const vs  = vStyle(data.result);
+  function renderResult(data, inputVal) {
+    lastResult = { data, inputVal };
+    const vs = vStyle(data.result);
     const max = data.max_score || 10;
     const pct = Math.min(100, Math.round((data.score / max) * 100));
-
     const vName = document.getElementById('verdictName');
-    vName.textContent = data.result;
-    vName.className = 'verdict-name ' + vs.text;
-
+    vName.textContent = data.result; vName.className = 'verdict-name ' + vs.text;
     document.getElementById('verdictReason').textContent = data.reason || '';
-
     const pill = document.getElementById('verdictPill');
-    pill.textContent = data.result;
-    pill.className = 'verdict-pill ' + vs.pill;
-
+    pill.textContent = data.result; pill.className = 'verdict-pill ' + vs.pill;
     document.getElementById('scoreLabel').textContent = data.score + ' / ' + max;
-
     const fill = document.getElementById('barFill');
-    fill.style.background = vs.bar;
-    fill.style.width = '0%';
+    fill.style.background = vs.bar; fill.style.width = '0%';
     requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; }));
-
     const wrap = document.getElementById('signalsWrap');
     wrap.innerHTML = '';
-    if (data.signals && data.signals.length) {
-      data.signals.forEach(s => {
-        const el = document.createElement('span');
-        el.className = 'signal-pill';
-        el.textContent = s;
-        wrap.appendChild(el);
-      });
-    } else {
-      wrap.innerHTML = '<span class="no-signals">No threat anchors flagged</span>';
-    }
-
+    if (data.signals && data.signals.length) data.signals.forEach(s => { const el = document.createElement('span'); el.className = 'signal-pill'; el.textContent = s; wrap.appendChild(el); });
+    else wrap.innerHTML = '<span class="no-signals">No threat anchors flagged</span>';
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.classList.remove('copied'); copyBtn.querySelector('span').textContent = 'Copy';
     showResult(vs.card);
   }
 
+  /* ── Copy ─────────────────────────────────────── */
+  function copyResult() {
+    if (!lastResult) return;
+    const { data } = lastResult;
+    const text = 'ScamShield verdict: ' + data.result + '\n' + (data.reason || '') + '\nRisk score: ' + data.score + '/' + (data.max_score || 10);
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.classList.add('copied'); btn.querySelector('span').textContent = 'Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.querySelector('span').textContent = 'Copy'; }, 2000);
+      showToast('Copied!', 'Result copied to clipboard.', 'success');
+    });
+  }
+
+  /* ── Share card ───────────────────────────────── */
+  function shareResult() {
+    if (!lastResult) return;
+    const { data } = lastResult;
+    const vs = vStyle(data.result);
+    const canvas = document.getElementById('shareCanvas');
+    const W = 800, H = 420;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#0d1018'); bg.addColorStop(1, '#080a0f');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W*0.2, H*0.2, 0, W*0.2, H*0.2, W*0.5);
+    glow.addColorStop(0, 'rgba(212,170,85,0.12)'); glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, W-1, H-1);
+    ctx.fillStyle = vs.color + '18'; ctx.beginPath(); ctx.roundRect(40, 40, 44, 44, 10); ctx.fill();
+    ctx.strokeStyle = vs.color + '44'; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(40, 40, 44, 44, 10); ctx.stroke();
+    ctx.font = '600 14px sans-serif'; ctx.fillStyle = '#d4aa55'; ctx.textBaseline = 'middle'; ctx.fillText('ScamShield', 96, 62);
+    ctx.font = 'bold 48px serif'; ctx.fillStyle = vs.color; ctx.textBaseline = 'top'; ctx.fillText(data.result, 40, 120);
+    const reason = data.reason || '';
+    ctx.font = '300 16px sans-serif'; ctx.fillStyle = 'rgba(240,237,231,0.6)';
+    const words = reason.split(' '); let line = ''; let y = 188;
+    words.forEach(word => { const test = line + word + ' '; if (ctx.measureText(test).width > W - 80) { ctx.fillText(line, 40, y); line = word + ' '; y += 24; } else line = test; });
+    if (line) ctx.fillText(line, 40, y);
+    const barY = 290, barH = 6, barW = W - 80;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.roundRect(40, barY, barW, barH, 3); ctx.fill();
+    const pct = Math.min(1, data.score / (data.max_score || 10));
+    ctx.fillStyle = vs.color; ctx.beginPath(); ctx.roundRect(40, barY, barW * pct, barH, 3); ctx.fill();
+    ctx.font = '500 12px sans-serif'; ctx.fillStyle = 'rgba(126,132,148,0.9)';
+    ctx.fillText('Risk: ' + data.score + ' / ' + (data.max_score || 10), 40, barY + 22);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0, H-56, W, 56);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, H-56); ctx.lineTo(W, H-56); ctx.stroke();
+    ctx.font = '500 12px sans-serif'; ctx.fillStyle = 'rgba(126,132,148,0.7)';
+    ctx.fillText('Verified by ScamShield', 40, H-22);
+    ctx.fillStyle = vs.color; ctx.textAlign = 'right';
+    ctx.fillText(new Date().toLocaleDateString(), W-40, H-22);
+    ctx.textAlign = 'left';
+    const link = document.createElement('a');
+    link.download = 'scamshield-result.png'; link.href = canvas.toDataURL('image/png'); link.click();
+    showToast('Image saved!', 'Share it to warn others.', 'success');
+  }
+
+  /* ── History ──────────────────────────────────── */
   function pushHistory(text, verdict) {
     const vs = vStyle(verdict);
-
-    // Desktop sidebar
     const list = document.getElementById('historyList');
     const item = document.createElement('div');
     item.className = 'history-item';
-    item.innerHTML =
-      '<span class="history-text">' + text.slice(0,48).replace(/</g,'&lt;') + '…</span>' +
-      '<span class="h-badge ' + vs.badge + '">' + verdict + '</span>';
+    item.innerHTML = '<span class="history-text">' + text.slice(0,48).replace(/</g,'&lt;') + '…</span><span class="h-badge ' + vs.badge + '">' + verdict + '</span>';
     list.insertBefore(item, list.firstChild);
     while (list.children.length > 8) list.removeChild(list.lastChild);
-
-    // Mobile history chips
-    const mobileScroll = document.getElementById('mobileHistoryScroll');
-    if (mobileScroll) {
-      const chip = document.createElement('div');
-      chip.className = 'mobile-history-chip';
-      chip.innerHTML =
-        '<span>' + text.slice(0,28).replace(/</g,'&lt;') + '…</span>' +
-        '<span class="h-badge ' + vs.badge + '">' + verdict + '</span>';
-      mobileScroll.insertBefore(chip, mobileScroll.firstChild);
-      while (mobileScroll.children.length > 6) mobileScroll.removeChild(mobileScroll.lastChild);
-    }
+    const ms = document.getElementById('mobileHistoryScroll');
+    if (ms) { const chip = document.createElement('div'); chip.className = 'mobile-history-chip'; chip.innerHTML = '<span>' + text.slice(0,28).replace(/</g,'&lt;') + '…</span><span class="h-badge ' + vs.badge + '">' + verdict + '</span>'; ms.insertBefore(chip, ms.firstChild); while (ms.children.length > 6) ms.removeChild(ms.lastChild); }
   }
 
+  /* ── Auth ─────────────────────────────────────── */
   let isSignUp = false;
-
   function openAuth(signup) {
     isSignUp = signup;
     document.getElementById('authTitle').textContent = signup ? 'Create your account' : 'Welcome back';
-    document.getElementById('authToggle').innerHTML = signup
-      ? 'Already have an account? <span onclick="flipMode()">Sign in</span>'
-      : 'Don\'t have an account? <span onclick="flipMode()">Sign up</span>';
+    document.getElementById('authToggle').innerHTML = signup ? 'Already have an account? <span onclick="flipMode()">Sign in</span>' : 'Don\'t have an account? <span onclick="flipMode()">Sign up</span>';
     document.getElementById('authModal').classList.add('open');
   }
-
   function flipMode() { openAuth(!isSignUp); }
-
-  function backdropClose(e) {
-    if (e.target === document.getElementById('authModal'))
-      document.getElementById('authModal').classList.remove('open');
-  }
+  function backdropClose(e) { if (e.target === document.getElementById('authModal')) document.getElementById('authModal').classList.remove('open'); }
 
   document.getElementById('authSubmitBtn').addEventListener('click', async () => {
-    if (!sb) return alert('Add your Supabase credentials at the top of the script first.');
+    if (!sb) { showToast('Setup needed', 'Add your Supabase credentials first.', 'error'); return; }
     const email = document.getElementById('authEmail').value.trim();
-    const pw    = document.getElementById('authPw').value.trim();
+    const pw = document.getElementById('authPw').value.trim();
     try {
       if (isSignUp) {
         const { error } = await sb.auth.signUp({ email, password: pw });
         if (error) throw error;
-        alert('Check your inbox for a verification link!');
+        showToast('Check your inbox!', 'A verification link is on its way.', 'success');
       } else {
         const { error } = await sb.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
         const { data: { session } } = await sb.auth.getSession();
-        if (session?.user?.email) renderUserNav(session.user.email);
+        if (session?.user?.email) { renderUserNav(session.user.email); showToast('Signed in', 'Welcome back!', 'success'); }
       }
       document.getElementById('authModal').classList.remove('open');
-    } catch (err) { alert(err.message); }
+    } catch (err) { showToast('Error', err.message, 'error'); }
   });
 
-  function renderUserNav(email) {
-    document.getElementById('navRight').innerHTML =
-      '<span style="font-size:13px;color:var(--muted);letter-spacing:0">' + email + '</span>' +
-      '<button class="btn-ghost" onclick="handleSignOut()">Sign Out</button>';
-  }
-
+  function renderUserNav(email) { document.getElementById('navRight').innerHTML = '<span style="font-size:13px;color:var(--muted)">' + email + '</span><button class="btn-ghost" onclick="handleSignOut()">Sign Out</button>'; }
   async function handleSignOut() {
     if (sb) await sb.auth.signOut();
-    document.getElementById('navRight').innerHTML =
-      '<button class="btn-ghost" onclick="openAuth(false)">Sign In</button>' +
-      '<button class="btn-gold"  onclick="openAuth(true)">Get Started</button>';
+    document.getElementById('navRight').innerHTML = '<button class="lang-btn" onclick="toggleLanguage()">العربية</button><button class="btn-ghost" onclick="openAuth(false)">Sign In</button><button class="btn-gold" onclick="openAuth(true)">Get Started</button>';
+    showToast('Signed out', 'See you next time.', 'info');
   }
 
-  document.getElementById('msgInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) executeScan();
-  });
+  /* ── Keyboard ─────────────────────────────────── */
+  document.getElementById('msgInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) executeScan(); });
+  document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') executeScan(); });
 
+  /* ── Language ─────────────────────────────────── */
   let currentLang = 'en';
-
   function toggleLanguage() {
     currentLang = currentLang === 'en' ? 'ar' : 'en';
     const isAr = currentLang === 'ar';
     document.body.classList.toggle('rtl', isAr);
     document.documentElement.setAttribute('lang', isAr ? 'ar' : 'en');
     document.getElementById('langToggle').textContent = isAr ? 'English' : 'العربية';
-
-    document.querySelectorAll('[data-en][data-ar]').forEach(el => {
-      const val = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en');
-      if (!val) return;
-      if (val.includes('<')) el.innerHTML = val;
-      else el.textContent = val;
-    });
-
+    document.querySelectorAll('[data-en][data-ar]').forEach(el => { const val = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en'); if (!val) return; if (val.includes('<')) el.innerHTML = val; else el.textContent = val; });
     const ta = document.getElementById('msgInput');
-    ta.placeholder = isAr
-      ? (ta.getAttribute('data-ar-placeholder') || 'الصق رسالة SMS أو واتساب هنا…')
-      : (ta.getAttribute('data-en-placeholder') || 'Paste an SMS or WhatsApp message here…');
-
+    ta.placeholder = isAr ? (ta.getAttribute('data-ar-placeholder') || '') : (ta.getAttribute('data-en-placeholder') || '');
     const btn = document.getElementById('scanBtn');
     if (!btn.disabled) btn.textContent = isAr ? 'افحص الرسالة' : 'Verify Content';
-
     const uzp = document.querySelector('.upload-zone p');
-    if (uzp) uzp.innerHTML = isAr
-      ? 'أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك'
-      : 'Drop a screenshot here or <span>browse</span> — we\'ll read the text for you';
-
-    document.getElementById('authToggle').innerHTML = isAr
-      ? (isSignUp ? 'لديك حساب بالفعل؟ <span onclick="flipMode()">تسجيل الدخول</span>'
-                  : 'ليس لديك حساب؟ <span onclick="flipMode()">إنشاء حساب</span>')
-      : (isSignUp ? 'Already have an account? <span onclick="flipMode()">Sign in</span>'
-                  : 'Don\'t have an account? <span onclick="flipMode()">Sign up</span>');
+    if (uzp) uzp.innerHTML = isAr ? 'أفلت لقطة الشاشة هنا أو <span>تصفح</span> — سنقرأ النص نيابةً عنك' : 'Drop a screenshot here or <span>browse</span> — we\'ll read the text for you';
+    document.getElementById('authToggle').innerHTML = isAr ? (isSignUp ? 'لديك حساب بالفعل؟ <span onclick="flipMode()">تسجيل الدخول</span>' : 'ليس لديك حساب؟ <span onclick="flipMode()">إنشاء حساب</span>') : (isSignUp ? 'Already have an account? <span onclick="flipMode()">Sign in</span>' : 'Don\'t have an account? <span onclick="flipMode()">Sign up</span>');
   }
 </script>
 </body>
