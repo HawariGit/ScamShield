@@ -1,0 +1,24 @@
+{
+  "name": "ScamShield",
+  "short_name": "ScamShield",
+  "description": "Detect scam messages and links instantly before you click.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080a0f",
+  "theme_color": "#080a0f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23131722'/><path d='M96 32L48 56V96c0 31.2 24.8 60 48 68 23.2-8 48-36.8 48-68V56L96 32Z' stroke='%23d4aa55' stroke-width='8' fill='rgba(212,170,85,0.12)'/><path d='M76 96l20 20 32-32' stroke='%23d4aa55' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23131722'/><path d='M256 80L120 148V256c0 83.2 66 160 136 181 70-21 136-97.8 136-181V148L256 80Z' stroke='%23d4aa55' stroke-width='18' fill='rgba(212,170,85,0.12)'/><path d='M196 256l56 56 88-88' stroke='%23d4aa55' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["utilities", "security"],
+  "lang": "en"
+}
