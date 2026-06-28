@@ -1,13 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 import re
 import httpx
 import asyncio
 import os
 import json
 import time
+import logging
 from threading import Lock
+
+# ── ACTIVITY LOG ─────────────────────────────────────────────────────────
+_handler = logging.StreamHandler()
+_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"))
+activity_log = logging.getLogger("scamshield.activity")
+activity_log.setLevel(logging.INFO)
+activity_log.addHandler(_handler)
+activity_log.propagate = False
 
 app = FastAPI()
 
@@ -20,6 +30,161 @@ app.add_middleware(
 
 class Message(BaseModel):
     text: str
+
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+
+class ProRequest(BaseModel):
+    reason: Optional[str] = ""
+
+# ══════════════════════════════════════════════════════════════════════════
+# SUPABASE CONFIG
+# ══════════════════════════════════════════════════════════════════════════
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zenkmbirabknbxspakwe.supabase.co")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplbmttYmlyYWJrbmJ4c3Bha3dlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE3ODQsImV4cCI6MjA5NzY5Nzc4NH0.S04dbJwEJJzZqU3Ll6DkEH1618gyh1i52n6TDsbAXqI")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")  # needed for admin ops like granting Pro
+
+
+async def supabase_request(method: str, path: str, data: dict = None, token: str = None, use_service_key: bool = False) -> dict:
+    """Generic Supabase REST API helper."""
+    key = SUPABASE_SERVICE_KEY if use_service_key and SUPABASE_SERVICE_KEY else SUPABASE_ANON_KEY
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {token or key}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    }
+    url = f"{SUPABASE_URL}{path}"
+    async with httpx.AsyncClient(timeout=8.0) as client:
+        if method == "GET":
+            resp = await client.get(url, headers=headers)
+        elif method == "POST":
+            resp = await client.post(url, headers=headers, json=data)
+        elif method == "PATCH":
+            resp = await client.patch(url, headers=headers, json=data)
+        else:
+            raise ValueError(f"Unsupported method: {method}")
+    return {"status": resp.status_code, "data": resp.json() if resp.content else {}}
+
+
+async def get_user_from_token(token: str) -> dict | None:
+    """Validate a JWT and return the user profile, or None if invalid."""
+    if not token:
+        return None
+    try:
+        result = await supabase_request("GET", "/auth/v1/user", token=token)
+        if result["status"] != 200:
+            return None
+        user_id = result["data"].get("id")
+        if not user_id:
+            return None
+        # Fetch profile (includes is_pro status)
+        profile = await supabase_request(
+            "GET", f"/rest/v1/profiles?id=eq.{user_id}&select=*",
+            token=token
+        )
+        if profile["status"] == 200 and profile["data"]:
+            return {**result["data"], "profile": profile["data"][0]}
+        return result["data"]
+    except Exception:
+        return None
+
+
+async def save_scan_to_history(user_id: str, token: str, scan_result: dict, message_preview: str):
+    """Save a scan to the user's history — fire and forget, never block the scan response."""
+    try:
+        await supabase_request(
+            "POST", "/rest/v1/scans",
+            data={
+                "user_id": user_id,
+                "message_preview": message_preview[:120],
+                "result": scan_result["result"],
+                "score": scan_result["score"],
+                "signals": scan_result["signals"],
+                "reason": scan_result["reason"],
+                "ai_reviewed": scan_result.get("ai_reviewed", False),
+            },
+            token=token
+        )
+    except Exception as e:
+        activity_log.info(f"HISTORY_SAVE_ERROR user={user_id} err={e}")
+
+
+# ── AUTH ENDPOINTS ────────────────────────────────────────────────────────
+
+@app.post("/auth/signup")
+async def signup(req: AuthRequest):
+    result = await supabase_request(
+        "POST", "/auth/v1/signup",
+        data={"email": req.email, "password": req.password}
+    )
+    if result["status"] not in (200, 201):
+        activity_log.info(f"SIGNUP_FAIL email={req.email}")
+        raise HTTPException(status_code=400, detail=result["data"].get("msg", "Signup failed"))
+    activity_log.info(f"SIGNUP email={req.email}")
+    return {"message": "Account created successfully", "user": result["data"]}
+
+
+@app.post("/auth/login")
+async def login(req: AuthRequest):
+    result = await supabase_request(
+        "POST", "/auth/v1/token?grant_type=password",
+        data={"email": req.email, "password": req.password}
+    )
+    if result["status"] != 200:
+        activity_log.info(f"LOGIN_FAIL email={req.email}")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    activity_log.info(f"LOGIN email={req.email}")
+    return {
+        "access_token": result["data"]["access_token"],
+        "user": result["data"]["user"],
+    }
+
+
+@app.get("/auth/me")
+async def me(authorization: Optional[str] = Header(default=None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = await get_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    profile = user.get("profile", {})
+    return {
+        "id": user["id"],
+        "email": user.get("email"),
+        "is_pro": profile.get("is_pro", False),
+        "pro_requested": profile.get("pro_requested", False),
+    }
+
+
+@app.get("/history")
+async def get_history(authorization: Optional[str] = Header(default=None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = await get_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required to view history")
+    user_id = user["id"]
+    result = await supabase_request(
+        "GET", f"/rest/v1/scans?user_id=eq.{user_id}&order=created_at.desc&limit=50&select=*",
+        token=token
+    )
+    return result["data"] if result["status"] == 200 else []
+
+
+@app.post("/request-pro")
+async def request_pro(req: ProRequest, authorization: Optional[str] = Header(default=None)):
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = await get_user_from_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required")
+    user_id = user["id"]
+    await supabase_request(
+        "PATCH", f"/rest/v1/profiles?id=eq.{user_id}",
+        data={"pro_requested": True},
+        token=token
+    )
+    return {"message": "Pro access requested — we'll review and upgrade your account within 24 hours."}
 
 # ══════════════════════════════════════════════════════════════════════════
 # AI SECOND-OPINION CONFIG (Hugging Face Inference Providers, OpenAI-compatible)
@@ -381,7 +546,7 @@ def normalize_text(text: str) -> str:
 
 
 @app.post("/scan")
-async def scan(message: Message):
+async def scan(message: Message, authorization: Optional[str] = Header(default=None)):
     raw = message.text
     normalized = normalize_text(raw)
     has_arabic = contains_arabic(raw)
@@ -402,10 +567,10 @@ async def scan(message: Message):
             if label not in signals:
                 signals.append(label)
 
-    # English legit-context signals (reduce score, never below 0 overall)
+    # English legit-context signals
     for phrase, weight in LEGIT_SIGNALS_EN.items():
         if phrase in normalized:
-            score += weight  # weight is negative
+            score += weight
             signals.append(f"+ {phrase}")
 
     # Arabic keyword + phrase scoring
@@ -425,10 +590,10 @@ async def scan(message: Message):
                 score += weight
                 signals.append(f"+ {phrase}")
 
-    # Link extraction + analysis (pattern-level always; live fetch with timeout budget)
+    # Link extraction + analysis
     urls = URL_PATTERN.findall(raw)
     urls = [u[0] if isinstance(u, tuple) else u for u in urls]
-    urls = list(dict.fromkeys(urls))[:3]  # cap at 3 URLs to keep response fast
+    urls = list(dict.fromkeys(urls))[:3]
 
     link_details = []
     if urls:
@@ -443,9 +608,6 @@ async def scan(message: Message):
             link_details.append(r)
 
     signals = list(dict.fromkeys(signals))
-
-    # Raw score is uncapped internally and can go negative from legit signals.
-    # Floor at 0, cap at 25 (realistic ceiling given current weights), scale to 100.
     score = max(score, 0)
     raw_capped = min(score, 25)
     score_100 = round((raw_capped / 25) * 100)
@@ -460,21 +622,28 @@ async def scan(message: Message):
         result = "Safe"
         reason = "No strong scam indicators found"
 
-    rule_based_result = result  # keep the original rule-based verdict visible for transparency
+    rule_based_result = result
     ai_opinion = None
     ai_used = False
 
-    # AI now reviews every scan. The rule-based result above is computed first and
-    # always returned as a fallback if the AI call fails, times out, or no key is set —
-    # the tool degrades gracefully rather than ever erroring out.
-    if HF_TOKEN:
+    # Check if user is logged in and is Pro
+    token = (authorization or "").replace("Bearer ", "").strip()
+    user = None
+    is_pro = False
+    if token:
+        user = await get_user_from_token(token)
+        if user:
+            is_pro = user.get("profile", {}).get("is_pro", False)
+
+    # AI review: Pro users always get it (within budget). Free users get rule-based only.
+    if is_pro and HF_TOKEN and _ai_budget_available():
         ai_opinion = await get_ai_second_opinion(raw, signals, score_100)
         if ai_opinion is not None:
             ai_used = True
             result = ai_opinion["verdict"]
             reason = ai_opinion.get("reason", reason)
 
-    return {
+    scan_result = {
         "result": result,
         "score": score_100,
         "signals": signals,
@@ -486,7 +655,20 @@ async def scan(message: Message):
         "ai_confidence": ai_opinion.get("confidence") if ai_opinion else None,
         "rule_based_result": rule_based_result,
         "ai_budget": _ai_budget_status(),
+        "is_pro": is_pro,
     }
+
+    # Save to history for logged-in users (fire and forget — never blocks response)
+    if user:
+        asyncio.create_task(save_scan_to_history(user["id"], token, scan_result, raw))
+
+    user_tag = f"user={user['email']}" if user and user.get("email") else "anon"
+    activity_log.info(
+        f"SCAN {user_tag} result={result} score={score_100} ai={ai_used} "
+        f"lang={'ar+en' if has_arabic else 'en'} preview={repr(raw[:60])}"
+    )
+
+    return scan_result
 
 
 @app.get("/ai-budget")
